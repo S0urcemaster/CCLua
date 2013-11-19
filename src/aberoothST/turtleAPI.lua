@@ -26,28 +26,24 @@ getCoords = function()
 end
 
 
--- Drehung ohne Beruecksichtigung der Orientation
-dreheLinks = function()
+-- simple turtle.turnLeft storing the angle in coords.v
+turnLeft = function()
 
 		turtle.turnLeft()
 		coords.v = (coords.v - 90) % 360
 
 end
 
-dreheRechts = function()
+-- simple turtle.turnRight storing the angle in coords.v
+turnRight = function()
 
 		turtle.turnRight()
 		coords.v = (coords.v + 90) % 360
 		
 end
 
-umdrehen = function()
-	dreheLinks()
-	dreheLinks()
-end
-
--- Stellt sicher, dass turtle.forward() tatschlich ausgefhrt wird
-vor = function()
+-- turtle.forward() using dig and attack to clear the way
+forward = function()
 	if not turtle.forward() then
 		local counter = 0
 		
@@ -63,13 +59,11 @@ vor = function()
 				turtle.attack()
 				counter = counter + 1
 				if counter == maxAttackCount then
-					-- alle Berechnungen kann man jetzt wegwerfen :(
 					error("Cannot move forward")
 				end
 			end
 		end
 	end
-	-- erhoehe richtige Koordinate um +/- 1
 	local d = coords.v == 0 and 1 or coords.v == 180 and -1 or 0
 	coords.y = coords.y + d
 	d = coords.v == 270 and 1 or coords.v == 90 and -1 or 0
@@ -78,7 +72,7 @@ vor = function()
 end
 
 
--- Stellt sicher, dass turtle.up() tatschlich ausgefhrt wird
+-- turtle.up() using dig and attack to clear the way
 hoch = function()
 	if not turtle.up() then
 		local counter = 0
@@ -101,8 +95,8 @@ hoch = function()
 	coords.z = coords.z + 1
 end
 
--- Stellt sicher, dass turtle.down() tatschlich ausgefhrt wird
-runter = function()
+-- turtle.down() using dig and attack to clear the way
+down = function()
 	if not turtle.down() then
 		local counter = 0
 		
@@ -124,13 +118,12 @@ runter = function()
 	coords.z = coords.z - 1
 end
 
--- Stellt sicher, dass turtle.back() tatschlich ausgefhrt wird
-zurck = function()
+-- turtle.back() using dig and attack to clear the way
+back = function()
 	if not turtle.back() then
 		local counter = 0
-		dreheLinks()
-		dreheLinks()
-		-- im Prinzip dasselbe wie bei vor(), auer der Fehlermeldung
+		turnLeft()
+		turnLeft()
 		repeat
 			turtle.dig()
 			counter = counter + 1
@@ -143,14 +136,14 @@ zurck = function()
 				turtle.attack()
 				counter = counter + 1
 				if counter == maxAttackCount then
-					dreheLinks()
-					dreheLinks()
+					turnLeft()
+					turnLeft()
 					error("Cannot move back")
 				end
 			end
 		end
-		dreheRechts()
-		dreheRechts()
+		turnRight()
+		turnRight()
 	end
 	local d = coords.v == 0 and 1 or coords.v == 180 and -1 or 0
 	coords.y = coords.y - d
@@ -158,8 +151,8 @@ zurck = function()
 	coords.x = coords.x - d
 end
 
--- stellt sicher, dass oben kein Block mehr ist
-grabOben = function()
+-- turtle.digUp() clearing floating blocks
+digUp = function()
 
 	while turtle.detectUp() do
     turtle.digUp()
@@ -168,76 +161,15 @@ grabOben = function()
 
 end
 
-grabUnten = function()
+-- till now only wraps turtle.digDown()
+digDown = function()
 
 	turtle.digDown()
 
 end
 
-setOrientation = function(lr)
-
-	orientation = lr
-
-end
-
--- dient dazu bei mehreren ebenen dieselbe schleife von der anderen seite verwenden
--- zu knnen ohne umzurechnen
-flipOrientation = function()
-	if orientation == "r" then orientation = "l"
-	else orientation = "r" end
-end
-
-
--- Drehung unter Bercksichtigung der Orientation
-links = function()
-
-	if orientation == "l" then
-		dreheLinks()
-	else
-		dreheRechts()
-	end
-	
-end
-
-rechts = function()
-
-	if orientation == "l" then
-		dreheRechts()
-	else
-		dreheLinks()
-	end
-
-end
-
--- dreh dich in richtung 0/90/180/270
-ausrichten = function(richtung)
-	local drehung = capi.drehung(coords.v, richtung)
-	if drehung > 0 then	dreheRechts()
-		if drehung > 90 then dreheRechts()
-		end
-	elseif drehung < 0 then dreheLinks()
-		if drehung < -90 then dreheLinks()
-		end
-	end
-end
-
-faceWithOrientation = function(richtung)
-
-	if orientation == "r" then
-		if richtung == 90 then richtung = 270
-		elseif richtung == 270 then richtung = 90 end
-	end
-	ausrichten(richtung)
-
-end
-
-getAusrichtung = function()
-	return coords.v
-end
-
-
--- Stellt sicher, dass turtle.place() den Block gesetzt hat
-setz = function(slot)
+-- Enforces turtle.place()
+place = function(slot)
   slot = slot or 1
   nextSlot(slot)
 	if not turtle.place() then
@@ -261,8 +193,8 @@ setz = function(slot)
 end
 
 
--- Stellt sicher, dass turtle.placeUp() den Block gesetzt hat
-setzOben = function(slot)
+-- Enforces turtle.placeUp()
+placeUp = function(slot)
   slot = slot or 1
   nextSlot(slot)
 	if not turtle.placeUp() then
@@ -287,8 +219,8 @@ setzOben = function(slot)
 end
 
 
--- Stellt sicher, dass turtle.placeDown() den Block gesetzt hat
-setzUnten = function(slot)
+-- Enforces turtle.placeDown()
+placeDown = function(slot)
   slot = slot or 1
   nextSlot(slot)
 	if not turtle.placeDown() then
@@ -311,9 +243,7 @@ setzUnten = function(slot)
 	end
 end
 
--- wähle slot n
--- wenn dieser leer ist, nimm den nächsten
--- wenn n nicht angegeben ist, fang bei 1 an
+-- Select next slot not empty
 nextSlot = function(n)
 
 	if n == nil then n = 1 end
@@ -326,8 +256,7 @@ nextSlot = function(n)
 	end
 end
 
--- wählt den slot aus und gibt true zurück wenn items vorhanden sind
--- sonst false
+-- ??? function uncommon
 selectSlotNotEmpty = function(n)
 
 	turtle.select(n)
@@ -336,22 +265,96 @@ selectSlotNotEmpty = function(n)
 
 end
 
-gehezu = function(x, y, z, fForward, fUp, fDown)
+
+-- sets the orientation on which left() and right() operate on
+setOrientation = function(lr)
+
+	orientation = lr
+
+end
+
+-- l->r, r->l
+flipOrientation = function()
+	orientation = orientation == r and "l" or "r"
+end
+
+
+-- turnLeft() taking orientation into account
+leftO = function()
+
+	_ = orientation == "l" and turnLeft() or turnRight()
+	
+end
+
+-- turnRight() taking orientation into account
+rightO = function()
+
+	_ = orientation == "l" and turnRight() or turnLeft()
+
+end
+
+-- turn to 0/90/180/270 degrees
+justify = function(richtung)
+	local drehung = rotation(coords.v, richtung)
+	if drehung > 0 then	turnRight()
+		if drehung > 90 then turnRight()
+		end
+	elseif drehung < 0 then turnLeft()
+		if drehung < -90 then turnLeft()
+		end
+	end
+end
+
+-- ??? relic?
+faceWithOrientation = function(richtung)
+
+	if orientation == "r" then
+		if richtung == 90 then richtung = 270
+		elseif richtung == 270 then richtung = 90 end
+	end
+	justify(richtung)
+
+end
+
+
+--calculates the closest rotation angle from -90deg to +180deg
+rotation = function(start, ziel)
+	
+  if start == ziel then return 0 end
+  
+  if start == 0 then start = 360 end
+  if ziel == 0 then ziel = 360 end
+  
+  diff = ziel - start
+  
+  if math.abs(diff) == 180 then return 180 end
+  
+  if math.abs(diff) == 270 then return -diff/3 end
+  
+  
+  return diff
+
+end
+
+
+-- move to x,y,z with the turtle placment block as origin (0,0,0)
+-- fForward, fUp, fDown are the functions to use when moving
+-- if nil, forward(), up(), down() are used
+moveTo = function(x, y, z, fForward, fUp, fDown)
   z = z or 1
-  fForward = fForward or vor
-  fUp = fUp or hoch
-  fDown = fDown or runter
+  fForward = fForward or forward
+  fUp = fUp or up
+  fDown = fDown or down
   
 	local nach = vector.new(x, y, z)
-	local coords = tapi.getCoords()
 	local von = vector.new(coords.x, coords.y, coords.z)
 	delta = nach - von
 --print("Coords: "..coords.x.." "..coords.y.." "..coords.z.."  Delta: "..delta.x.." "..delta.y.." "..delta.z)
 	if delta.y ~= 0 then
 		if capi.sign(delta.y) == 1 then
-			ausrichten(0)
+			justify(0)
 		else
-			ausrichten(180)
+			justify(180)
 		end
 		for b = capi.sign(delta.y), delta.y, capi.sign(delta.y) do
 			fForward()
@@ -359,9 +362,9 @@ gehezu = function(x, y, z, fForward, fUp, fDown)
 	end
 	if delta.x ~= 0 then
 		if capi.sign(delta.x) == 1 then
-			ausrichten(270)
+			justifj(270)
 		else
-			ausrichten(90)
+			justify(90)
 		end
 		for a = capi.sign(delta.x), delta.x, capi.sign(delta.x) do
 			fForward()
@@ -379,6 +382,7 @@ gehezu = function(x, y, z, fForward, fUp, fDown)
 	end
 end
 
+-- moveTo without damaging anything and simple way finder
 softMoveTo = function(x, y, z)
   z = z or 1
   
@@ -395,9 +399,9 @@ print("Coords: "..coords.x.." "..coords.y.." "..coords.z.."  Delta: "..delta.x..
     if delta.x ~= 0 then
       
       if capi.sign(delta.x) == 1 then
-        ausrichten(270)
+        justify(270)
       else
-        ausrichten(90)
+        justify(90)
       end
       
       if turtle.forward() then
@@ -410,9 +414,9 @@ print("Coords: "..coords.x.." "..coords.y.." "..coords.z.."  Delta: "..delta.x..
     if not moved and delta.y ~= 0 then
       
       if capi.sign(delta.y) == 1 then
-        ausrichten(0)
+        justify(0)
       else
-        ausrichten(180)
+        justify(180)
       end
       
       if turtle.forward() then

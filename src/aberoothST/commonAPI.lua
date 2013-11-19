@@ -277,43 +277,24 @@ loadKeyValueTable = function(filename)
   
 end
 
--- returns true if the number is even
+-- returns true if number is even
 isEven = function(n)
   return n % 2 == 0
 end
 
--- returns true if the number is odd
+-- returns true if number is odd
 isOdd = function(n)
 	return n % 2 ~= 0
 end
 
--- return true if the number is an integer
+-- return true if  number is an integer
 isInteger = function(n)
   return n == math.floor(n)
 end
 
--- returns -1 for numbers < 0 and 1 for 0 and < 0  
+-- returns -1 for numbers < 0 and 1 for 0 and > 0  
 -- Thx to rv55
 sign = function(x)
   return (x<0 and -1) or 1
-end
-
---gibt einen drehwinkel von -90deg bis +180deg zurueck
-drehung = function(start, ziel)
-	
-  if start == ziel then return 0 end
-  
-  if start == 0 then start = 360 end
-  if ziel == 0 then ziel = 360 end
-  
-  diff = ziel - start
-  
-  if math.abs(diff) == 180 then return 180 end
-  
-  if math.abs(diff) == 270 then return -diff/3 end
-  
-  
-  return diff
-
 end
 
