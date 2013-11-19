@@ -24,10 +24,12 @@ local keytable = {
 }
 
 local logFlag = false
+-- do the logging
 setLog = function(tf)
   logFlag = tf
 end
 
+-- append text line to log.cc
 cclog = function(text)
   if logFlag then
     file = fs.open("log.cc", "a")
@@ -36,6 +38,7 @@ cclog = function(text)
   end
 end
 
+-- recursive function needed
 cclogtable = function(text, t)
   if logFlag then
     file = fs.open("log.cc", "a")
@@ -57,20 +60,27 @@ cclogtable = function(text, t)
   end
 end
 
+-- returns the ComputerCraft keyboard codes as a table
 getKeyTable = function()
   return keytable
 end
 
+-- checks if the ComputerCraft keycode letter is a number
+-- returns true/false
 isNumberKey = function(key)
   return key > 1 and key <11
 end
 
+-- checks if the ComputerCraft keycode letter is a letter
+-- returns true/false
 isLetterKey = function(key)
   return key > 15 and key < 26 or key > 29 and key < 39
     or key > 43 and key < 53 -- < 51 with standard keyboard layout
     or key == keytable.SPACE -- not with standard layout
 end
 
+-- checks if the ComputerCraft keycode letter is one of the arrow keys
+-- returns true/false
 isArrowKey = function(key)
   return key == keytable.UP or
       key == keytable.DOWN or
@@ -78,7 +88,9 @@ isArrowKey = function(key)
       key == keytable.RIGHT
 end
 
+-- a loadstring procedure
 -- Thanks, BigSHinyToys
+-- returns code chunk or error
 run = function(path, ...)
     if fs.exists(path) and not fs.isDir(path) then
             file = fs.open(path,"r")
@@ -100,7 +112,9 @@ run = function(path, ...)
     return nil
 end
 
+-- reads the keyboard directly using os.pullEvent
 -- Thanks, ComputerCraft Wiki
+-- returns key
 rawread = function()
     while true do
         local sEvent, param = os.pullEvent("key")
@@ -110,11 +124,15 @@ rawread = function()
     end
 end
 
+-- wrapper around os.pullEvent "char"
+-- returns char
 pullChar = function()
   event, char = os.pullEvent "char"
   return char
 end
 
+-- evaluates os.pullEvent "key" and does os.pullEvent "char" if key was a letter or number
+-- returns the char
 rawreadKeyChar = function()
   event, key = os.pullEvent "key"
   if isLetterKey(key) or isNumberKey(key) then
@@ -124,7 +142,8 @@ rawreadKeyChar = function()
   return key
 end
 
-
+-- a specialized function for the startUI. Emulates io.input.
+-- returns string
 rawInput = function(firstLetter)
   
   x0, y0 = term.getCursorPos()
@@ -214,7 +233,7 @@ rawInputNumber = function(firstDigit)
   
 end
 
-
+-- simple save for 1-dimensional array (properties)
 saveKeyValueTable = function(table, filename)
   
   file = fs.open(filename, "w")
@@ -230,6 +249,8 @@ saveKeyValueTable = function(table, filename)
   
 end
 
+-- loads a properties file in a table
+-- returns table
 loadKeyValueTable = function(filename)
   
   file = fs.open(filename, "r")
@@ -256,20 +277,23 @@ loadKeyValueTable = function(filename)
   
 end
 
-
-zahlGerade = function(n)
+-- returns true if the number is even
+isEven = function(n)
   return n % 2 == 0
 end
 
-zahlUngerade = function(n)
+-- returns true if the number is odd
+isOdd = function(n)
 	return n % 2 ~= 0
 end
 
-istGanzzahlig = function(n)
+-- return true if the number is an integer
+isInteger = function(n)
   return n == math.floor(n)
 end
 
--- Thx to "rv55"
+-- returns -1 for numbers < 0 and 1 for 0 and < 0  
+-- Thx to rv55
 sign = function(x)
   return (x<0 and -1) or 1
 end
