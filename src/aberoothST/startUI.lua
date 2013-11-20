@@ -3,44 +3,165 @@
 local appDir = "_apps"
 
 local apps = {}
+local currentApp = 0
 
-local page = {start = 0, programs = 1, misc = 2}
+local pages = {}
+local currentPage = 0 
 
 local pageItems = {}
 
+local cursorStops = {}
+local cursorStop = 1
 
 
-local drawEmptyPage = function()
+local sprint = function(text, x, y)
 
---io.write("123456789012345678901234567890123456789\n")
-  term.clear()
-  term.setCursorPos(1,1)
-  io.write("|            |            |            \n")
-  io.write("|            |            |\n")
-  io.write("\n")
-  io.write("\n")
-  io.write("\n")
-  io.write("\n")
-  io.write("\n")
-  io.write("\n")
-  io.write("[  ]      [  ]      [  ]      [  ]     \n")
-  io.write("[  ]      [  ]      [  ]      [  ]\n")
-  io.write("[  ]      [  ]      [  ]      [  ]\n")
-  io.write("[  ]      [  ]      [  ]      [  ]\n")
-  io.write("")
-
-  term.setCursorPos(2, 1)
-  io.write("Start")
-  term.setCursorPos(15, 1)
-  io.write("Porgrams")
-  term.setCursorPos(28, 1)
-  io.write("Misc")
+	term.setCursorPos(x, y)
+	io.write(text)
 
 end
 
-local drawPageItems = function(n)
+
+local printStatus = function(text)
+
+	local x, y = term.getCursorPos()
+	sprint(text, 1, 13)
+	term.setCursorPos(x, y)
+
+end
+
+
+local drawBlankPage = function()
+
+	local screen = [[|            |            |           |
+
+
+
+
+
+
+
+[  ]      [  ]      [  ]      [  ]
+[  ]      [  ]      [  ]      [  ]
+[  ]      [  ]      [  ]      [  ]
+[  ]      [  ]      [  ]      [  ]
+]]
+	sprint(screen, 1, 1)
+  sprint("Start", 2, 1)
+  sprint("Apps", 15, 1)
+  sprint("Misc", 28, 1)
+
+end
+
+
+
+local start = function()
+
 
 	
+
+end
+
+
+local drawSelectionList = function(items)
+	
+	local x = 0
+	local y = 3
+	
+	for key, item in ipairs(items) do
+	
+		text = ""
+		if #item > 18 then
+			text = string.sub(item, 1, 18)
+		else
+			text = item
+		end
+		sprint(text, x + 1, y)
+		table.insert(cursorStops, {x + 1, y})
+		
+		if x == 0 then
+			x = 20
+		else
+			x = 0
+			y = y + 1
+		end
+	
+	end
+
+end
+
+
+local adjustParameter = function(parameter)
+  x = 9 - #parameter
+  if x < 1 then x = 1 end
+  par = ""
+  if #parameter > 8 then
+    par = string.sub(parameter, 1, 8)
+  else
+    par = parameter
+  end
+  return par, x
+end
+
+
+local drawAttributeList = function(attributes)
+	
+	cursorStops = {}
+	
+	local x = 0
+	local y = 3
+
+	for key, value in ipairs(attributes) do
+		
+		local keytext, keyx = ajustParameter(key)
+		sprint(keytext..">", x + keyx, y)
+		if value ~= nil then io.write(value) end
+		
+		table.insert(cursorStops, {x + 10, y})
+		
+		if x == 0 then
+			x = 20
+		else
+			x = 0
+			y = y + 1
+		end
+	
+	end
+
+end
+
+
+local startPage = function()
+
+	sprint("[",  1, 1)
+	sprint("]", 14, 1)
+	sprint("|", 27, 1)
+	sprint("|", 39, 1)
+	
+	sprint("App: "..apps[currentApp].name)
+	
+	
+	drawAttributeList()
+
+end
+
+
+local appPage = function()
+
+	sprint("|",  1, 1)
+	sprint("[", 14, 1)
+	sprint("]", 27, 1)
+	sprint("|", 39, 1)
+	
+end
+
+
+local miscPage = function()
+
+	sprint("|",  1, 1)
+	sprint("|", 14, 1)
+	sprint("[", 27, 1)
+	sprint("]", 39, 1)
 
 end
 
@@ -62,17 +183,22 @@ local main = function()
 				setmetatable(tEnv, {__index = _G})
 				setfenv(app, tEnv)
 				app()
-				tApi = {}
+				local tApi = {}
 				for k,v in ipairs(tEnv) do
 					tApi[k] = v
 				end
 				_G[file] = tApi
+				table.insert(apps, {name = file, params = {}, reqs = {}})
 			else
 				print(err)
 			end
 		end
 		
 	end
+	
+	table.insert(pages, startPage)
+	table.insert(pages, appPage)
+	table.insert(pages, miscPage)
 	
 	start()
 
