@@ -131,6 +131,11 @@ pullChar = function()
   return char
 end
 
+pullKey = function()
+	event, key = os.pullEvent "key"
+	return key
+end
+
 -- evaluates os.pullEvent "key" and does os.pullEvent "char" if key was a letter or number
 -- returns the char
 rawreadKeyChar = function()
