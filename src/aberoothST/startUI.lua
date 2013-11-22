@@ -1,24 +1,16 @@
 -- startUI limited to Standard Computer (39 x 13)
 os.loadAPI("commonAPI")
 local capi = commonAPI
-assert(capi ~= nil)
+
+capi.setLog(true)
+capi.createNewLog()
+
+local configFilename = "startui.cfg"
 
 local appDir = "_apps"
 
 local apps = {}
-local currentApp = {
-
-	getArgs = function() return {} end,
-	validateArgs = function() return true end,
-	getFuel = function() return 10 end,
-	getSlots = function() return {} end,
-	validateSlots = function() return {} end,
-
-}
-
-currentApp.name = "No app selected"
-currentApp.params = {}
-currentApp.reqs = {}
+local currentApp = nil
 
 local currentPage = nil
 
@@ -26,6 +18,70 @@ local pageItems = {}
 
 local cursorStops = {}
 local cursorStop = 1
+
+local loadConfig = function()
+  local config = capi.loadKeyValueTable(configFilename)
+  if config ~= nil then
+    for k,v in pairs(config) do
+      if v[1] == "lastProgram" then
+        currentProgram = v[2]
+      else
+        table.insert(params, {v[1], v[2]})
+      end
+    end
+  end
+  return config
+end
+
+local saveConfig = function()
+  local config = {}
+  table.insert(config, {"lastProgram", currentApp.name})
+  for k,v in pairs(currentApp.params) do
+    table.insert(config, {v[1], v[2]})
+  end
+  capi.saveKeyValueTable(config, configFilename)
+end
+
+local saveAppConfig = function(app)
+
+	local config = {}
+	local file = fs.combine(appDir, app.name..".cfg")
+	for k,v in pairs(app.params) do
+		table.insert(config, {v[1], v[2]})
+	end
+	capi.saveKeyValueTable(config, file)
+
+end
+
+local loadAppConfig = function(app)
+
+	local filename = fs.combine(appDir, app.name..".cfg")
+	if not fs.exists(filename) then return end
+	local config = capi.loadKeyValueTable(filename)
+	
+	-- check if app params have changed (new app version)
+	local allmatch = true
+	for k, v in pairs(app.params) do
+		local match = false
+		for l, u in pairs(config) do
+			if v[1] == u[1] then
+				match = true
+			end
+		end
+		if not match then allmatch = false break end
+	end
+	
+	if allmatch then
+		for k, v in pairs(app.params) do
+			for l, u in pairs(config) do
+				if v[1] == u[1] then
+					v[2] = u[2]
+				end
+			end	
+		end
+	end
+	
+end
 
 
 local sprint = function(text, x, y)
@@ -47,23 +103,23 @@ end
 
 local drawBlankPage = function()
 
-	local screen = [[|            |            |           |
-
-
-
-
-
-
-
-
-
-
-
-]]
-	sprint(screen, 1, 1)
+	sprint("|            |            |           |", 1, 1)
+	sprint("                                       ", 1, 2)
+	sprint("                                       ", 1, 3)
+	sprint("                                       ", 1, 4)
+	sprint("                                       ", 1, 5)
+	sprint("                                       ", 1, 6)
+	sprint("                                       ", 1, 7)
+	sprint("                                       ", 1, 8)
+	sprint("                                       ", 1, 9)
+	sprint("                                       ", 1, 10)
+	sprint("                                       ", 1, 11)
+	sprint("                                       ", 1, 12)
+	sprint("                                       ", 1, 13)
   sprint("Start", 2, 1)
   sprint("Apps", 15, 1)
   sprint("Misc", 28, 1)
+  cursorStop = 1
 
 end
 
@@ -72,7 +128,7 @@ local drawSelectionList = function(items)
 	
 	local x = 0
 	local y = 3
-	
+capi.cclogtable("drawSelectionList-> ", items)
 	for key, item in ipairs(items) do
 	
 		text = ""
@@ -110,17 +166,17 @@ end
 
 
 local drawAttributeList = function(attributes)
-	
+capi.cclogtable("drawAttributeList-> ", attributes)
 	cursorStops = {}
 	
 	local x = 0
 	local y = 3
 
-	for key, value in ipairs(attributes) do
+	for key, value in pairs(attributes) do
 		
-		local keytext, keyx = ajustParameter(key)
+		local keytext, keyx = adjustParameter(value[1])
 		sprint(keytext..">", x + keyx, y)
-		if value ~= nil then io.write(value) end
+		if value[2] ~= nil then io.write(value[2]) end
 		
 		table.insert(cursorStops, {x = x + 10, y = y})
 		
@@ -137,11 +193,13 @@ end
 
 
 local startPage = function()
-
+capi.cclog("startPage->")
 	sprint("[",  1, 1)
 	sprint("]", 14, 1)
 	sprint("|", 27, 1)
 	sprint("|", 39, 1)
+	
+	cursorStops = {}
 	
 	local screen = [[[  ]      [  ]      [  ]      [  ]
 [  ]      [  ]      [  ]      [  ]
@@ -151,11 +209,22 @@ local startPage = function()
 	sprint(screen, 1, 9)
 	sprint("App: ", 1, 2)
 	if currentApp ~= nil then
-		io.write(currentApp.name)
-		drawAttributeList(currentApp.params)
+		local app = _G[currentApp]
+		io.write(app.name)
+capi.cclog("startPage->currentApp "..currentApp)
+capi.cclogtable("startPage->app", app)
+		local args = app.getArgs()
+		app.params = {}
+		for k,v in pairs(args) do
+			table.insert(app.params, {v, 0})
+		end
+		loadAppConfig(app)
+capi.cclogtable("startPage->app.params", app.params)
+
+		drawAttributeList(app.params)
 		local x = 0
 		local y = 9
-		for req in ipairs(currentApp.reqs) do
+		for _, req in ipairs(app.reqs) do
 		
 			local digit = req[1] > 9 and 2 or 3
 	    term.setCursorPos(x*10 + digit, y)
@@ -173,42 +242,39 @@ local startPage = function()
 		
 		end
 	end
-	
+	table.insert(cursorStops, {x = 1, y = 13})
 end
 
 
 local appPage = function()
-
+capi.cclog("appPage->")
 	sprint("|",  1, 1)
 	sprint("[", 14, 1)
 	sprint("]", 27, 1)
 	sprint("|", 39, 1)
+	cursorStops = {}
 	
-	local appNames = {}
-	for app in ipairs(apps) do
-		table.insert(appNames, app.name)
+	drawSelectionList(apps)
 	
-	end
-	
-	drawSelectionList(appNames)
-	
-	
-	
+	table.insert(cursorStops, {x = 1, y = 13})
+capi.cclogtable("appPage->cursorStops: ", cursorStops)
 end
 
 
 local miscPage = function()
-
+capi.cclog("miscPage->")
 	sprint("|",  1, 1)
 	sprint("|", 14, 1)
 	sprint("[", 27, 1)
 	sprint("]", 39, 1)
 
+	table.insert(cursorStops, {x = 1, y = 13})
+
 end
 
 -- set cursorStop
 local setCursor = function(pos)
-  
+capi.cclog("setCursor-> "..pos)
   term.setCursorPos(cursorStops[pos].x, cursorStops[pos].y)
   if pos == #cursorStops then
     if currentPage == 0 then  
@@ -226,7 +292,6 @@ local start = function()
 	drawBlankPage()
 	currentPage = startPage
 	currentPage()
-	table.insert(cursorStops, {x = 1, y = 13})
 	
 	cursorStop = 1
 	local key = nil
@@ -235,7 +300,7 @@ local start = function()
 	
 		setCursor(cursorStop)
 		key = capi.pullKey()
-		
+capi.cclog("pullKey: "..(true and capi.getKeyTable()[key] or key))
 		if false then
 		
 		elseif key == capi.getKeyTable().TAB then
@@ -246,9 +311,9 @@ local start = function()
       elseif currentPage == miscPage then
       	currentPage = startPage
       end
+      drawBlankPage()
       currentPage()
 
-			table.insert(cursorStops, {x = 1, y = 13})
 	    cursorStop = 1
       
 		elseif key == capi.getKeyTable().UP then
@@ -281,13 +346,19 @@ local start = function()
 			
 		elseif key == capi.getKeyTable().ENTER then
 			if currentPage == startPage then
-			
-				if not currentApp.validateArgs(currentApp.params) then
-					printStatus("Wrong or missing parameters")
+				local app = _G[currentApp]
+				local params = {}
+				for k,v in ipairs(app.params) do
+					params[v[1]] = v[2]
+				end
+				local valid = app.validateArgs(params)
+				if valid ~= "ok" then
+					printStatus(valid)
 					
 				else
-					local validSlots = currentApp.validateSlots()
-					if currentApp.getFuel() > turtle.getFuelLevel() then
+					local validSlots = app.validateSlots()
+					if app.getFuel() > 
+					turtle.getFuelLevel() then
 						printStatus("Turtle needs "..currentApp.getFuel().." fuel")
 					
 					elseif validSlots == "builtInExact" and
@@ -299,6 +370,7 @@ local start = function()
 					elseif validSlots == false then
 						printStatus("App reports invalid slot supply")
 					else
+						saveAppConfig(app)
 						term.clear()
 						sprint("Running "..currentApp.name..">", 1, 1)
 						currentApp.run()
@@ -309,7 +381,10 @@ local start = function()
 			
 			elseif currentPage == appPage then
 			
-				
+				currentApp = apps[cursorStop]
+				currentPage = startPage
+				drawBlankPage()
+				currentPage()
 			
 			end
 			
@@ -337,7 +412,7 @@ end
 
 
 local main = function()
-
+capi.cclog("-> main()")
 	-- read app location
 	local list = fs.list("")
 	for l in ipairs(list) do
@@ -347,29 +422,41 @@ local main = function()
 		error("App directory '"..appDir.."' not found")
 	end
 	local files = fs.list(appDir)
+capi.cclogtable("Files: ", files)
 	for _, file in ipairs(files) do
 		if _G[file] ~= nil then
 			print("App name '"..file.."' collides with existing library name. Please change.")
+capi.cclog("App name '"..file.."' collides with existing library name. Please change.")
 		else
-			local app, err = loadfile(file)
+			local app, err = loadfile("_apps\\"..file)
 			if app then
 				local tEnv = {}
 				setmetatable(tEnv, {__index = _G})
 				setfenv(app, tEnv)
 				app()
+
 				local tApi = {}
-				for k,v in ipairs(tEnv) do
+				for k,v in pairs(tEnv) do
 					tApi[k] = v
 				end
+capi.cclogtable("tApi", tApi)
+				tApi.name = file
+				tApi.params = {}
+				tApi.reqs = {}
 				_G[file] = tApi
-				table.insert(apps, {name = file, params = {}, reqs = {}})
+				table.insert(apps, file)
+capi.cclog("app '"..file.."' loaded")
 			else
 				print(err)
+capi.cclog("loadfile('"..file.."'), "..err)
 			end
 		end
 		
 	end
-
+capi.cclogtable("Apps: ", apps)
+	
+	-- load configs
+	
 	
 	start()
 

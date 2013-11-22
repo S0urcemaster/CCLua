@@ -8,19 +8,19 @@ local keytable = {
   [33] = "f", [34] = "g", [35] = "h", [36] = "j", [37] = "k", 
   [38] = "l", [44] = "z", [45] = "x", [46] = "c", [47] = "v", 
   [48] = "b", [49] = "n", [50] = "m", 
-  ENTER = 28,
-  BACKSPACE = 14, 
-  LSHIFT = 42, 
-  RSHIFT = 54, 
-  TAB = 15, 
-  ESCAPE = 1, 
-  DELETE = 211, 
-  UP = 200, 
-  DOWN = 208, 
-  LEFT = 203, 
-  RIGHT = 205,
-  MINUS = 12,
-  SPACE = 57
+  ENTER = 28, [28] = "ENTER",
+  BACKSPACE = 14, [14] = "BACKSPACE",
+  LSHIFT = 42, [42] = "LSHIFT",
+  RSHIFT = 54, [54] = "RSHIFT",
+  TAB = 15, [15] = "TAB",
+  ESCAPE = 1, [1] = "ESCAPE",
+  DELETE = 211, [211] = "DELETE",
+  UP = 200, [200] = "UP",
+  DOWN = 208, [208] = "DOWN",
+  LEFT = 203, [203] = "LEFT",
+  RIGHT = 205, [205] = "RIGHT",
+  MINUS = 12, [12] = "MINUS",
+  SPACE = 57, [57] = "SPACE"
 }
 
 local logFlag = false
@@ -29,6 +29,9 @@ setLog = function(tf)
   logFlag = tf
 end
 
+createNewLog = function()
+	fs.delete("log.cc")
+end
 -- append text line to log.cc
 cclog = function(text)
   if logFlag then
@@ -43,21 +46,32 @@ cclogtable = function(text, t)
   if logFlag then
     file = fs.open("log.cc", "a")
     log = ""
-    for k,v in pairs(t) do
-      sub = v
-      if type(v) == "table" then
-        sub = "{"
-        for d, t in pairs(v) do
-          sub = sub.."{k:"..d.." v:"..t.."}"
-        end
-        sub = sub.."}"
-      end
-      log = log.."{k:"..k.." v:"..sub.."}"
-    end
-    file.write(os.time().." "..text.." "..log.."\n")
+    local s = tableToString(t)
+    file.write(os.time().." "..text.." "..s.."\n")
     file.close()
     file = nil
   end
+end
+
+tableToString = function(t)
+	
+	local s = ""
+	if t == nil then return "nil" end
+	for k,v in pairs(t) do
+		
+		s = s.."{k="..k..", v="
+		
+		if type(v) == "table" then
+			s = s..tableToString(v)
+		elseif type(v) == "function" then
+			s = s.."function"
+		else
+			s = s..v
+		end
+		s = s.."} "
+	
+	end
+	return s
 end
 
 -- returns the ComputerCraft keyboard codes as a table

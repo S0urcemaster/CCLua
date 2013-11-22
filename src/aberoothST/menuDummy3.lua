@@ -7,15 +7,15 @@ getArgs = function()
   
 end
 
-validateArgs = function(value1, value2)
-
-  if tonumber(value1) == nil then return "strValue", "must be a number" end
-  if value2 ~= "left" or value2 ~= "right" then
-    return "intValue", "must be 'left' or 'right'" end
+validateArgs = function(args)
+	
+  if tonumber(args.intValue) == nil then return "intValue must be a number" end
+  if args.strValue ~= "left" or value2 ~= "right" then
+    return "strValue must be 'left' or 'right'" end
   
   value1 = tonumber(value1)
   value2 = value2
-
+	return "ok"
 end
 
 getFuel = function()
