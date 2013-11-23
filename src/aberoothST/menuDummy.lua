@@ -10,10 +10,10 @@ end
 validateArgs = function(args)
 	
   if tonumber(args.intValue) == nil then return "intValue must be a number" end
-  if args.strValue ~= "left" or value2 ~= "right" then
+  if args.strValue ~= "left" and args.strValue ~= "right" then
     return "strValue must be 'left' or 'right'" end
   
-  value1 = tonumber(value1)
+  value1 = tonumber(args.intValue)
   value2 = value2
 	return "ok"
 end
@@ -27,9 +27,9 @@ end
 getSlots = function()
   
   slots = {}
-  table.insert(slots, {64, "Iron"})
-  table.insert(slots, {56, "Iron"})
-  table.insert(slots, {32, "Stone"})
+  table.insert(slots, {64, "Stone"})
+  table.insert(slots, {56, "Wood"})
+  table.insert(slots, {32, "Sand"})
   return slots
   
 end
@@ -44,6 +44,10 @@ end
 
 runApp = function()
 
-
+	print("MenuDummy3 will do something now")
+	
+	print("MenuDummy3 is working")
+	
+	print("MenuDummy3 finished")
 
 end

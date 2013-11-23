@@ -20,7 +20,8 @@ local keytable = {
   LEFT = 203, [203] = "LEFT",
   RIGHT = 205, [205] = "RIGHT",
   MINUS = 12, [12] = "MINUS",
-  SPACE = 57, [57] = "SPACE"
+  SPACE = 57, [57] = "SPACE",
+  HOME = 199, [199] = "HOME"
 }
 
 local logFlag = false
@@ -272,19 +273,19 @@ end
 -- returns table
 loadKeyValueTable = function(filename)
   
-  file = fs.open(filename, "r")
+  local file = fs.open(filename, "r")
   
   if file == nil then return nil end
   
-  line = file.readLine()
+  local line = file.readLine()
   
-  kvTable = {}
+  local kvTable = {}
   
   while line ~= nil do
     
-    equalsPos = string.find(line, "=", 1, true)
-    key = string.sub(line, 1, equalsPos - 1)
-    value = string.sub(line, equalsPos + 1, #line)
+    local equalsPos = string.find(line, "=", 1, true)
+    local key = string.sub(line, 1, equalsPos - 1)
+    local value = string.sub(line, equalsPos + 1, #line)
     table.insert(kvTable, {key, value})
     line = file.readLine()
     
