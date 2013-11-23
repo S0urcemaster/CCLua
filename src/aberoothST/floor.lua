@@ -15,7 +15,7 @@ validateArgs = function(args)
   if args.orientation ~= "l" and args.orientation ~= "r" then
     return "orientation must be 'l' or 'r'" end
   
-  length = tonumber(args.lenght)
+  length = tonumber(args.length)
   width = tonumber(args.width)
   orientation = args.orientation
 	return true
