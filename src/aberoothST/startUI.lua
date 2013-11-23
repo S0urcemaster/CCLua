@@ -516,7 +516,7 @@ capi.cclogtable("start->enter->params", params)
 					not isRequirementsExact() then
 						printStatus("Exact slot supply needed")
 					elseif validSlots == "builtInSum" and
-					not isRequirementsMinimum then
+					not isRequirementsMinimum() then
 						printStatus("More Items needed in sum")
 					elseif validSlots == false then
 						printStatus("App reports invalid slot supply")
