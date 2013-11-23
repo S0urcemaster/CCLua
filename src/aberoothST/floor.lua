@@ -52,54 +52,54 @@ validateSlots = function()
 end
 
 runApp = function()
-	print("floor running")
---	tapi.vor()
---	
---	for x = 1, breite do
---	  for y = 1, lnge-1 do
---	    
---	    tapi.nextSlot()
---	    tapi.setzUnten()
---	    tapi.vor()
---	    
---	  end
---	  
---	  if x < breite then
---	    tapi.nextSlot()
---	    tapi.setzUnten()
---	    tapi.ausrichtenMitOrientierung(270)
---	    tapi.vor()
---	    if capi.zahlGerade(x) then
---	      tapi.ausrichten(0)
---	    else
---	      tapi.ausrichten(180)
---	    end
---	  end
---	  
---	end
---	
---	tapi.nextSlot()
---	tapi.setzUnten()
---	
---	
---	if capi.zahlUngerade(breite) then
---	  tapi.ausrichten(180)
---	  for y = 1, lnge-1 do
---	    
---	    tapi.vor()
---	    
---	  end
---	end
---	
---	tapi.ausrichtenMitOrientierung(90)
---	
---	for x = 1, breite-1 do
---	  
---	  tapi.vor()
---	  
---	end
---	
---	tapi.ausrichten(0)
---	tapi.zurck()
+	--print("floor running")
+	tapi.forward()
+	
+	for x = 1, width do
+	  for y = 1, length-1 do
+	    
+	    tapi.nextSlot()
+	    tapi.placeDown()
+	    tapi.forward()
+	    
+	  end
+	  
+	  if x < width then
+	    tapi.nextSlot()
+	    tapi.placeDown()
+	    tapi.faceWithOrientation(270)
+	    tapi.forward()
+	    if capi.isEven(x) then
+	      tapi.justify(0)
+	    else
+	      tapi.justify(180)
+	    end
+	  end
+	  
+	end
+	
+	tapi.nextSlot()
+	tapi.placeDown()
+	
+	
+	if capi.isOdd(breite) then
+	  tapi.justify(180)
+	  for y = 1, length-1 do
+	    
+	    tapi.forward()
+	    
+	  end
+	end
+	
+	tapi.faceWithOrientation(90)
+	
+	for x = 1, width-1 do
+	  
+	  tapi.forward()
+	  
+	end
+	
+	tapi.justify(0)
+	tapi.back()
 
 end
