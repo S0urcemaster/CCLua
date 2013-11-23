@@ -4,7 +4,7 @@ local length, width, orientation
 
 getArgs = function()
 
-  return {"length", "width", "Orientation"}
+  return {"length", "width", "orientation"}
   
 end
 

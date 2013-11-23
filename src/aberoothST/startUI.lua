@@ -258,9 +258,9 @@ local adjustParameter = function(parameter)
   if x < 1 then x = 1 end
   local par = ""
   if #parameter > 8 then
-    par = string.sub(parameter, 1, 8)..""
+    par = string.sub(parameter, 1, 8)
   else
-    par = parameter..""
+    par = parameter
   end
   return par, x
 end
