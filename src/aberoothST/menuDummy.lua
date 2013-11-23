@@ -10,7 +10,7 @@ end
 validateArgs = function(args)
 	
   if tonumber(args.intValue) == nil then return "intValue must be a number" end
-  if args.strValue ~= "l" and args.strValue ~= "right" then
+  if args.strValue ~= "left" and args.strValue ~= "right" then
     return "strValue must be 'left' or 'right'" end
   
   value1 = tonumber(args.intValue)
