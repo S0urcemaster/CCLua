@@ -68,35 +68,63 @@ Press 'y' to install now
 or any key to cancel    >]]
 
 local apis = {
-	{"commonAPI", "nu4TmcSK"},
-	{"startUI", "XvYVJ6QT"},
-	{"turtleAPI", "y6JL2zRc"}
+	{"commonAPI", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/commonAPI.lua"},
+	{"startUI", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/startUI.lua"},
+	{"turtleAPI", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/turtleAPI.lua"}
 }
 
 local apps = {
-	{"menuDummy", ""},
-	{"weather", ""}
+	{"menuDummy", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/menuDummy.lua"},
+	{"weather", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/weather.lua"}
 }
 
 for i = 1, #pages do
 	term.clear()
 	term.setCursorPos(1, 1)
 	io.write(pages[i])
-	if i < #pages then io.write("Page "..i.."/5 Press any key to continue") end
+	if i < #pages then
+		io.write("Page "..i.."/5 Press any key to continue")
+		local event, char = os.pullEvent "char"
+	end
 end
 
 local event, char = os.pullEvent "char"
 
+term.clear()
+term.setCursorPos(1, 1)
+
 if char == "y" then
 
-	for i = 1, #apps do
+	for i = 1, #apis do
+		io.write("downloading "..apis[i][1])
+		local response = http.get(apis[i][2])
+		io.write("..writing")
+		local file = fs.open(apis[i][1], "w")
+		file.write(response.readAll())
+		file.close()
+		print("..done")
 	
-		--shell.run("pastebin get",
+	end
+	print()
+	
+	fs.delete("_apps")
+	fs.makeDir("_apps")	
+	for i = 1, #apps do
+		io.write("downloading "..apps[i][1])
+		local response = http.get(apps[i][2])
+		io.write("..writing")
+		local file = fs.open(fs.combine("_apps", apps[i][1]), "w")
+		file.write(response.readAll())
+		file.close()
+		print("..done")
 	
 	end
 	
-	fs.delete("_apps")
-	fs.makeDir("_apps")
+	print()
+	print("Installation complete")
+	print("You can run startUI by typing \"startui\"")
+	print("(You maybe need to reboot)") 
+	print("Have fun")
 	
 
 end

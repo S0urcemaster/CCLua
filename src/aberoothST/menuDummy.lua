@@ -15,7 +15,7 @@ validateArgs = function(args)
   
   value1 = tonumber(args.intValue)
   value2 = value2
-	return "ok"
+	return true
 end
 
 getFuel = function()
@@ -26,7 +26,7 @@ end
 
 getSlots = function()
   
-  slots = {}
+  local slots = {}
   table.insert(slots, {64, "Stone"})
   table.insert(slots, {56, "Wood"})
   table.insert(slots, {32, "Sand"})

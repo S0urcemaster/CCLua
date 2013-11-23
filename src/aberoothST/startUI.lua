@@ -53,7 +53,7 @@ os.loadAPI("commonAPI")
 os.loadAPI("turtleAPI")
 local capi = commonAPI
 
-capi.setLog(true)
+capi.setLog(false)
 capi.createNewLog()
 
 local configFilename = "startui.cfg"
