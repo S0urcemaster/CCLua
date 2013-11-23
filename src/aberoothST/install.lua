@@ -75,7 +75,8 @@ local apis = {
 
 local apps = {
 	{"menuDummy", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/menuDummy.lua"},
-	{"weather", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/weather.lua"}
+	{"weather", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/weather.lua"},
+	{"floor", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/floor.lua"}
 }
 
 for i = 1, #pages do

@@ -12,7 +12,7 @@ validateArgs = function(args)
 	
   if tonumber(args.length) == nil then return "length must be a number" end
   if tonumber(args.width) == nil then return "width must be a number" end
-  if args.orientation ~= "l" and args.strValue ~= "r" then
+  if args.orientation ~= "l" and args.orientation ~= "r" then
     return "orientation must be 'l' or 'r'" end
   
   length = tonumber(args.lenght)
