@@ -619,8 +619,8 @@ capi.cclogtable("Files: ", files)
 	for _, file in ipairs(files) do
 		local iscfg = string.find(file, ".-%.cfg")
 		if _G[file] ~= nil then
-			print("App name '"..file.."' collides with existing library name. Please change.")
-capi.cclog("App name '"..file.."' collides with existing library name. Please change.")
+			table.insert(apps, file)
+capi.cclog("App name '"..file.."' possibly collides with existing library name.")
 		elseif not iscfg then
 			local app, err = loadfile("_apps\\"..file)
 			if app then

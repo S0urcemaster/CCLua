@@ -1,4 +1,6 @@
 -- http://developer.yahoo.com/weather/#terms
+-- 12835812
+-- 2459115
 
 local capi = commonAPI
 if capi == nil then

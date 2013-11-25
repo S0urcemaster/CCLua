@@ -1,3 +1,8 @@
+-- install
+-- Execute this program to install the startui user interface
+-- and all available apps.
+
+
 --3456789012345678901234567890123456789
 local pages = {}
 pages[1] = 
@@ -76,8 +81,8 @@ local apis = {
 local apps = {
 	{"menuDummy", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/menuDummy.lua"},
 	{"weather", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/weather.lua"},
-	{"floor", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/floor.lua"},
-	{"windingStairs", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/windingStairs.lua"}
+	{"floor", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/floor.lua"}
+	--{"windingStairs", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/windingStairs.lua"}
 }
 
 for i = 1, #pages do
