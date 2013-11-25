@@ -110,7 +110,7 @@ local saveAppConfig = function(app)
 
 	local config = {}
 	local file = fs.combine(appDir, app.name..".cfg")
-	for k,v in pairs(app.params) do
+	for k,v in ipairs(app.params) do
 		table.insert(config, {v[1], v[2]})
 	end
 	capi.saveKeyValueTable(config, file)
@@ -127,9 +127,9 @@ local loadAppConfig = function(app)
 	
 	-- check if app params have changed (new app version)
 	local allmatch = true
-	for k, v in pairs(app.params) do
+	for k, v in ipairs(app.params) do
 		local match = false
-		for l, u in pairs(config) do
+		for l, u in ipairs(config) do
 			if v[1] == u[1] then
 				match = true
 			end
@@ -138,8 +138,8 @@ local loadAppConfig = function(app)
 	end
 	
 	if allmatch then
-		for k, v in pairs(app.params) do
-			for l, u in pairs(config) do
+		for k, v in ipairs(app.params) do
+			for l, u in ipairs(config) do
 				if v[1] == u[1] then
 					if tonumber(u[2]) ~= nil then
 						v[2] = tonumber(u[2])
