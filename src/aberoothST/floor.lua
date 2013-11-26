@@ -2,7 +2,7 @@
 local tapi = turtleAPI
 local capi = commonAPI
 assert(tapi~=nil)
-local length, width, orientation
+local length, width
 
 getArgs = function()
 
@@ -19,7 +19,7 @@ validateArgs = function(args)
   
   length = tonumber(args.length)
   width = tonumber(args.width)
-  orientation = args.orientation
+  tapi.setOrientation(args.orientation)
 	return true
 end
 
