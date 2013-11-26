@@ -347,16 +347,18 @@ capi.cclog("startPage->currentApp "..currentApp)
 		local app = _G[currentApp]
 		io.write(app.name)
 capi.cclogtable("startPage->app", app)
-		if app.getArgs ~= nil then
-			local args = app.getArgs()
-			app.params = {}
-			for k,v in pairs(args) do
-				table.insert(app.params, {v, 0})
+		if #app.params == 0 then -- no user input yet
+			if app.getArgs ~= nil then
+				local args = app.getArgs()
+				app.params = {}
+				for k,v in pairs(args) do
+					table.insert(app.params, {v, 0})
+				end
+				loadAppConfig(app)
+capi.cclogtable("startPage->app.params", app.params)
+		
+				drawAttributeList(app.params, 3)
 			end
-			loadAppConfig(app)
-	capi.cclogtable("startPage->app.params", app.params)
-	
-			drawAttributeList(app.params, 3)
 		end
 		drawSlots(app.slots)
 	end
@@ -392,10 +394,13 @@ capi.cclog("miscPage->")
 	sprint("|", 14, 1)
 	sprint("[", 27, 1)
 	sprint("]", 39, 1)
-	
-	if system.type == "Turtle" then system.fuel = turtle.getFuelLevel() end
-	
+		
 	sprint(system.type.."("..os.getComputerID()..") \""..os.getComputerLabel().."\"", 1, 2)
+	if system.type == "Turtle" then
+		system.fuel = turtle.getFuelLevel()
+		io.write(", Fuel: "..system.fuel)
+	end
+	
 	local coords = {}
 	coords[1] = {"x", system.coords.x}
 	coords[2] = {"z", system.coords.z}
@@ -502,7 +507,7 @@ capi.cclogtable("start->enter->params", params)
 					local validSlots = true
 					if app.getSlots ~= nil and app.validateSlots ~= nil then
 						app.slots = app.getSlots()
-						drawSlots(app.slots)
+						currentPage()
 						validSlots = app.validateSlots()
 					end
 					local fuel = 0
