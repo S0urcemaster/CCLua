@@ -1,5 +1,6 @@
 -- floor
 local tapi = turtleAPI
+local capi = commonAPI
 assert(tapi~=nil)
 local length, width, orientation
 
