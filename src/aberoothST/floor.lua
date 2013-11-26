@@ -1,6 +1,6 @@
 -- floor
 local tapi = turtleAPI
-
+assert(tapi~=nil)
 local length, width, orientation
 
 getArgs = function()
