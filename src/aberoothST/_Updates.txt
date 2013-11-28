@@ -1,0 +1,4 @@
+2013.11.27
+- new detailedSlots page functionality
+- new app info page functionality
+- new help page

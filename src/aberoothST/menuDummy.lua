@@ -34,6 +34,13 @@ getSlots = function()
   
 end
 
+getDetailedSlots = function()
+
+	local slots = {}
+	table.insert(slots, {64, "123456", "123456789", "123456789"})
+
+end
+
 validateSlots = function()
 
 	return "builtInExact"

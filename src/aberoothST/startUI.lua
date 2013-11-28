@@ -1,53 +1,74 @@
 -- startUI limited to Standard Computer (39 x 13)
 --
--- App Interface
 -- All apps in the "/_app" directory will be accessible in the ui.
--- Following functions can be implemented:
---
--- getArgs()
--- Return a table of strings that should be queried
--- Example: {"Length", "Direction"}
--- Can be left out if no args are required.
--- validateArgs will then also be ignored.
---
--- validateArgs(args)
--- Validate the args the user has typed in allready (or not)
--- and return an error message or true if all args are valid
--- Example:
--- if tonumber(args.Length) == nil then return "Length must be a number" end
--- if args.Direction ~= "north" and args.Direction ~="south" then
--- 		return "Direction must be 'north' or 'south'" end
--- return true -- if it passes here
--- If left out, true will be assumed as result.
---
--- getFuel()
--- Return the amount of fuel your operation needs (1 per movement).
--- The value will be checked against the actual fuel level of
--- the turtle and a message will be displayed if its insufficient.
--- Can be left out if no calculation is required.
--- 
--- getSlots()
--- Return a table of amount and item descriction to display in the ui.
--- Example: 
--- slots = {}
--- table.insert(slots, {64, "Stone"})
--- table.insert(slots, {20, "Wood"})
--- return slots
--- Can be left out.
--- 
--- validateSlots()
--- Return true or false if your calculation is not met or
--- return "builtInExact" or "builtInSum" if you want to check
--- with the built-in mechanism.
--- "builtInExact" checks for exact amounts in each slot where
--- "builtInSum" checks for the total amount of items in all slots.
--- There is no check against the item type, only amount.
--- Will be ignored when getSlots isn't present.
---
--- runApp()
--- After all checks have passed you can finally run your app.
--- All app code should be placed inside this function.
--- 
+-- For a description of the interface to developing own apps
+-- refer to _AppInterfaceDef.lua on github.com/snhub/cclua.
+
+--3456789012345678901234567890123456789
+local helpPages = {}
+helpPages[1] = 
+[[Hi, this is startUI, a user interface
+for running apps and managing user
+input. After installation, you can
+start with the command "startui".
+There are 3 pages you can switch with
+the TAB key. The first is the start
+page, which displays the currently
+active app, the second is the app
+page where you can select one of the
+available programs, the third is the
+misc page with tools like refuel.
+]]
+--3456789012345678901234567890123456789
+helpPages[2] = 
+[[Selecting Apps
+From the start page hit TAB to go to
+the app page. A list of all available
+apps is being displayed. Use the ARROW
+keys to select an app and hit ENTER.
+You will be returned to the start page
+and the parameters required for input
+are being displayed.
+If you have run this app before, the
+last values are loaded from its config
+file.
+]]
+--3456789012345678901234567890123456789
+helpPages[3] =
+[[Starting Apps
+After selecting an app, access each
+parameter with the ARROW keys, edit it
+with just typing letters or numbers.
+Complete input with an ARROW key or
+ENTER. If you typed in the required
+values move to the bottom line with the
+ARROW keys and hit ENTER to start the
+app. If anything went wrong, a status
+message is displayed in the bottom
+line. Change the parameter that is
+wrong and hit enter to see the result.
+]]
+--3456789012345678901234567890123456789
+helpPages[4] =
+[[If all parameters are correct, the
+slots that need to be filled are
+displayed. Fill the slots with the
+denoted blocks until the requirements
+are met. If the active app no longer
+reports errors, it will run.
+Additionally the input parameters are
+stored in a config file and are loaded
+when you start the app again later.
+Also the last used app is stored and
+loaded after reboot or logout.
+]]
+--3456789012345678901234567890123456789
+helpPages[5] =
+[[Any time you install or update, the
+"_app" folder will be cleared to remove
+deprecated files.
+If you do not want this, install
+manually or make a backup.]]
 
 os.loadAPI("commonAPI")
 os.loadAPI("turtleAPI")
@@ -175,7 +196,7 @@ end
 local drawBlankPage = function()
 
 	sprint("|            |            |           |", 1, 1)
-	sprint("                                       ", 1, 2)
+	sprint("                            Info / Help", 1, 2)
 	sprint("                                       ", 1, 3)
 	sprint("                                       ", 1, 4)
 	sprint("                                       ", 1, 5)
@@ -191,6 +212,104 @@ local drawBlankPage = function()
   sprint("Apps", 15, 1)
   sprint("Misc", 28, 1)
   cursorStop = 1
+
+end
+
+
+local drawInfoPage = function()
+
+	local app = _G[currentApp]
+	local info = app.getInfo()
+	
+	term.clear()
+	term.setCursorPos(1, 1)
+	
+	for i = 1, #info do
+		io.write(info[i].."/n")
+		if i < #info then
+			sprint("Page "..i.."/"..#i.." Press any key to continue", 1, 13)
+			capi.pullKey()
+		end
+	end
+	
+	sprint("Press any key to return to menu", 1, 13)
+
+end
+
+
+local drawHelpPage = function()
+
+	term.clear()
+	term.setCursorPos(1, 1)
+	
+	for i = 1, #helpPages do
+		io.write(helpPages[i].."/n")
+		if i < #helpPages then
+			sprint("Page "..i.."/"..#i.." Press any key to continue", 1, 13)
+			capi.pullKey()
+		end
+	end
+	
+	sprint("Press any key to return to menu", 1, 13)
+
+end
+
+
+local drawDetailSlotsPage = function()
+
+	sprint("[  ]      [  ]      [  ]      [  ]     ", 1, 1)
+	sprint("|         |         |         |        ", 1, 2)
+	sprint("|         |         |         |        ", 1, 3)
+	sprint("[  ]      [  ]      [  ]      [  ]     ", 1, 4)
+	sprint("|         |         |         |        ", 1, 5)
+	sprint("|         |         |         |        ", 1, 6)
+	sprint("[  ]      [  ]      [  ]      [  ]     ", 1, 7)
+	sprint("|         |         |         |        ", 1, 8)
+	sprint("|         |         |         |        ", 1, 9)
+	sprint("[  ]      [  ]      [  ]      [  ]     ", 1, 10)
+	sprint("|         |         |         |        ", 1, 11)
+	sprint("|         |         |         |        ", 1, 12)
+	sprint("Press key to return                    ", 1, 13)
+	
+	local app = _G[currentApp]
+	
+	local x = 0
+	local y = 1
+	for i = 1, #app.slots do
+	
+		local digit = app.slots[i][1] > 9 and 2 or 3
+    term.setCursorPos(x *10 +digit, y)
+    io.write(app.slots[i][1])
+    term.setCursorPos(x *10 +5, y)
+    local item = app.detailSlots[i][1]
+    
+    if item ~= nil and #item ~= 0 then
+	    if #item > 6 then
+	      item = string.sub(item, 1, 6)
+	    end
+	    io.write(item)
+	  end
+    
+    for j = 1, 2 do
+	    item = app.detailSlots[i][j+1]
+	    if item ~= nil and #item ~= 0 then
+	    	if #item > 9 then
+	    		item = string.sub(item, 1, 9)
+	    	end
+	    	sprint(item, x *10 +2, y +j)
+			end
+		end
+		x = x +1
+		if x > 3 then 
+			x = 0
+			y = y +3
+			if y > 12 then break end
+		end
+	
+	end
+	
+	cursorStops = {}
+	table.insert(cursorStops, {1, 13})
 
 end
 
@@ -310,7 +429,7 @@ local drawSlots = function(slots)
     io.write(slot[1])
     term.setCursorPos(x*10 + 5, y)
     local item = slot[2]
-    if #item > 5 then
+    if #item > 6 then
       item = string.sub(item, 1, 5)
     end
     io.write(item)
@@ -343,9 +462,20 @@ capi.cclog("startPage->")
 	sprint(screen, 1, 9)
 	sprint("App: ", 1, 2)
 	if currentApp ~= nil then
+	
 capi.cclog("startPage->currentApp "..currentApp)
+		
 		local app = _G[currentApp]
 		io.write(app.name)
+		
+		if app.getInfo ~= nil then
+			sprint("Info / ", 29, 2)
+			table.insert(cursorStops, {29, 2})
+		end
+		
+		sprint("Help", 36, 2)
+		table.insert(cursorStops, {36, 2})
+		
 capi.cclogtable("startPage->app", app)
 		if #app.params == 0 then -- no user input yet
 			if app.getArgs ~= nil then
@@ -361,6 +491,9 @@ capi.cclogtable("startPage->app.params", app.params)
 			end
 		end
 		drawSlots(app.slots)
+		if app.detailSlots ~= nil then
+			table.insert(cursorStops, {1, 9})
+		end
 	end
 	table.insert(cursorStops, {x = 1, y = 13})
 end
@@ -507,6 +640,9 @@ capi.cclogtable("start->enter->params", params)
 					local validSlots = true
 					if app.getSlots ~= nil and app.validateSlots ~= nil then
 						app.slots = app.getSlots()
+						if app.detailSlots ~= nil then
+							app.detailSlots = app.getDetailSlots()
+						end 
 						currentPage()
 						validSlots = app.validateSlots()
 					end
@@ -542,6 +678,23 @@ capi.cclogtable("start->enter->params", params)
 					end
 
 				end
+			
+			elseif currentPage == startPage and currentApp ~= nil and 
+			cursorStop == 2 or (cursorStop == 3 and _G[currentApp].getInfo ~= nil) then
+			
+				if cursorStop == 2 then
+					if _G[currentApp] == nil then
+						drawHelpPage()
+					else
+						drawInfoPage()
+					end
+				else
+					drawHelpPage()
+				end
+			
+			elseif currentPage == startPage and currentApp ~= nil and 
+			cursorStop == #cursorStops-1 then
+				drawDetailSlotsPage()
 			
 			elseif currentPage == appPage then
 			
@@ -642,6 +795,7 @@ capi.cclogtable("tApi", tApi)
 				tApi.name = file
 				tApi.params = {}
 				tApi.slots = {}
+				tApi.detailSlots = {}
 				_G[file] = tApi
 				table.insert(apps, file)
 capi.cclog("app '"..file.."' loaded")
