@@ -73,7 +73,7 @@ end
 
 
 -- turtle.up() using dig and attack to clear the way
-hoch = function()
+up = function()
 	if not turtle.up() then
 		local counter = 0
 		

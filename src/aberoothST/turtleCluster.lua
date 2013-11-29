@@ -132,10 +132,12 @@ runApp = function()
 					
 					for _, turtle in ipairs(cluster) do
 						print("Sending '"..buttons[bIndex].action.."' to channel "..turtle.channel)
-						modem.transmit(turtle.channel, 0, buttons[bIndex].action)
+						local action = buttons[bIndex].action
+						local timeout = #cluster
+						modem.transmit(turtle.channel, 0, textutils.serialize({action = action, timeout = timeout}))
 					end
 					
-					--sleep(0.5)
+					sleep(0.2)
 					term.redirect(monitor)
 					gui.drawUnclickedButton(buttons[bIndex])
 					term.restore()
@@ -177,32 +179,34 @@ runApp = function()
 		modem.open(replyChannel)
 		repeat
 			event, modemSide, senderChannel, replyChannel, message, senderDistance = os.pullEvent("modem_message")
-			local timeout = #cluster + 1
+			local mess = textutils.unserialize(message)
+			local sleeptime = 0.1
+			local timeout = mess.timeout
 			
-			if message == "forward" then
-				while timeout > 0 and not turtle.forward() do
-					sleep(0.5)
-					timeout = timeout -1
+			if mess.action == "forward" then
+				while not turtle.forward() and timeout > 0 do
+					sleep(sleeptime)
+					timeout = timeout -sleeptime
 				end
 				
-			elseif message == "back" then
-				while timeout > 0 and not turtle.back() do
-					sleep(0.5)
-					timeout = timeout -1
+			elseif mess.action == "back" then
+				while not turtle.back() and timeout > 0 do
+					sleep(sleeptime)
+					timeout = timeout -sleeptime
 				end
-			elseif message == "left" then
+			elseif mess.action == "left" then
 				turtle.turnLeft()
-			elseif message == "right" then
+			elseif mess.action == "right" then
 				turtle.turnRight()
-			elseif message == "up" then
-				while timeout > 0 and not turtle.up() do
-					sleep(0.5)
-					timeout = timeout -1
+			elseif mess.action == "up" then
+				while not turtle.up() and timeout > 0 do
+					sleep(sleeptime)
+					timeout = timeout -sleeptime
 				end
-			elseif message == "down" then
-				while timeout > 0 and not turtle.down() do
-					sleep(0.5)
-					timeout = timeout -1
+			elseif mess.action == "down" then
+				while not turtle.down() and timeout > 0 do
+					sleep(sleeptime)
+					timeout = timeout -sleeptime
 				end
 			end
 		until false

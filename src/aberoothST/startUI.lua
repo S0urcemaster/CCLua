@@ -651,7 +651,7 @@ capi.cclogtable("start->enter->params", params)
 					local slotsValid = true
 					if app.getSlots and app.validateSlots then
 						app.slots = app.getSlots()
-						if app.detailSlots ~= nil then
+						if app.getDetailSlots ~= nil then
 							app.detailSlots = app.getDetailSlots()
 						end 
 						currentPage()
