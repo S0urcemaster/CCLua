@@ -4,6 +4,8 @@
 -- For a description of the interface to developing own apps
 -- refer to _AppInterfaceDef.lua on github.com/snhub/cclua.
 
+local logging = true
+
 --3456789012345678901234567890123456789
 local helpPages = {}
 helpPages[1] = 
@@ -73,8 +75,11 @@ manually or make a backup.]]
 os.loadAPI("commonAPI")
 os.loadAPI("turtleAPI")
 local capi = commonAPI
+os.loadAPI("guiAPI")
 
-capi.setLog(false)
+shell.run("globals")
+
+capi.setLog(logging)
 capi.createNewLog()
 
 local configFilename = "startui.cfg"
@@ -97,6 +102,7 @@ local pageItems = {}
 
 local cursorStops = {}
 local cursorStop = 1
+local paramsOffset = 1
 
 
 local loadConfig = function()
@@ -196,7 +202,7 @@ end
 local drawBlankPage = function()
 
 	sprint("|            |            |           |", 1, 1)
-	sprint("                            Info / Help", 1, 2)
+	sprint("                                       ", 1, 2)
 	sprint("                                       ", 1, 3)
 	sprint("                                       ", 1, 4)
 	sprint("                                       ", 1, 5)
@@ -221,36 +227,35 @@ local drawInfoPage = function()
 	local app = _G[currentApp]
 	local info = app.getInfo()
 	
-	term.clear()
-	term.setCursorPos(1, 1)
 	
 	for i = 1, #info do
-		io.write(info[i].."/n")
+		term.clear()
+		sprint(info[i], 1, 1)
 		if i < #info then
-			sprint("Page "..i.."/"..#i.." Press any key to continue", 1, 13)
+			sprint("Page "..i.."/"..#info.." Press any key to continue", 1, 13)
 			capi.pullKey()
 		end
 	end
 	
 	sprint("Press any key to return to menu", 1, 13)
+	capi.pullKey()
 
 end
 
 
 local drawHelpPage = function()
 
-	term.clear()
-	term.setCursorPos(1, 1)
-	
 	for i = 1, #helpPages do
-		io.write(helpPages[i].."/n")
+		term.clear()
+		sprint(helpPages[i], 1, 1)
 		if i < #helpPages then
-			sprint("Page "..i.."/"..#i.." Press any key to continue", 1, 13)
+			sprint("Page "..i.."/"..#helpPages.." Press any key to continue", 1, 13)
 			capi.pullKey()
 		end
 	end
 	
 	sprint("Press any key to return to menu", 1, 13)
+	capi.pullKey()
 
 end
 
@@ -270,6 +275,7 @@ local drawDetailSlotsPage = function()
 	sprint("|         |         |         |        ", 1, 11)
 	sprint("|         |         |         |        ", 1, 12)
 	sprint("Press key to return                    ", 1, 13)
+	term.setCursorPos(21, 13)
 	
 	local app = _G[currentApp]
 	
@@ -308,8 +314,8 @@ local drawDetailSlotsPage = function()
 	
 	end
 	
-	cursorStops = {}
-	table.insert(cursorStops, {1, 13})
+	capi.pullKey()
+	sprint("Press any key to return", 1, 13)
 
 end
 
@@ -387,7 +393,6 @@ end
 
 local drawAttributeList = function(attributes, line)
 capi.cclogtable("drawAttributeList-> ", attributes)
-	cursorStops = {}
 	
 	local x = 0
 	local y = line
@@ -470,11 +475,14 @@ capi.cclog("startPage->currentApp "..currentApp)
 		
 		if app.getInfo ~= nil then
 			sprint("Info / ", 29, 2)
-			table.insert(cursorStops, {29, 2})
+			table.insert(cursorStops, {x = 29, y = 2})
+			paramsOffset = 2
+		else
+			paramsOffset = 1
 		end
 		
 		sprint("Help", 36, 2)
-		table.insert(cursorStops, {36, 2})
+		table.insert(cursorStops, {x = 36, y = 2})
 		
 capi.cclogtable("startPage->app", app)
 		if #app.params == 0 then -- no user input yet
@@ -487,12 +495,12 @@ capi.cclogtable("startPage->app", app)
 				loadAppConfig(app)
 capi.cclogtable("startPage->app.params", app.params)
 		
-				drawAttributeList(app.params, 3)
 			end
 		end
+		drawAttributeList(app.params, 3)
 		drawSlots(app.slots)
 		if app.detailSlots ~= nil then
-			table.insert(cursorStops, {1, 9})
+			table.insert(cursorStops, {x = 1, y = 9})
 		end
 	end
 	table.insert(cursorStops, {x = 1, y = 13})
@@ -514,7 +522,7 @@ capi.cclogtable("appPage->cursorStops: ", cursorStops)
 end
 
 
-refuel = function()
+local refuel = function()
 
 	turtle.refuel()
 
@@ -527,6 +535,8 @@ capi.cclog("miscPage->")
 	sprint("|", 14, 1)
 	sprint("[", 27, 1)
 	sprint("]", 39, 1)
+	
+	cursorStops = {}
 		
 	sprint(system.type.."("..os.getComputerID()..") \""..os.getComputerLabel().."\"", 1, 2)
 	if system.type == "Turtle" then
@@ -637,31 +647,32 @@ capi.cclogtable("start->enter->params", params)
 					printStatus(valid)
 					
 				else
-					local validSlots = true
-					if app.getSlots ~= nil and app.validateSlots ~= nil then
+					local slotsValid = true
+					if app.getSlots and app.validateSlots then
 						app.slots = app.getSlots()
 						if app.detailSlots ~= nil then
 							app.detailSlots = app.getDetailSlots()
 						end 
 						currentPage()
-						validSlots = app.validateSlots()
+						slotsValid = app.validateSlots()
 					end
 					local fuel = 0
-					if app.getFuel ~= nil then
+					if app.getFuel then
 						fuel = app.getFuel()
 					end
-					if fuel > turtle.getFuelLevel() then
-						printStatus("Turtle needs "..fuel-turtle.getFuelLevel().." more fuel")
-					
-					elseif validSlots == "builtInExact" and
-					not isRequirementsExact() then
+					if turtle then
+						if fuel > turtle.getFuelLevel() then
+							printStatus("Turtle needs "..fuel -turtle.getFuelLevel().." more fuel")
+						end
+					end
+					if slotsValid == "builtInExact" and	not isRequirementsExact() then
 						printStatus("Exact slot supply needed")
-					elseif validSlots == "builtInSum" and
-					not isRequirementsMinimum() then
+					elseif slotsValid == "builtInSum" and	not isRequirementsMinimum() then
 						printStatus("More Items needed in sum")
-					elseif validSlots == false then
+					elseif slotsValid == false then
 						printStatus("App reports invalid slot supply")
 					else
+capi.cclogtable("start->enter->save config->app", app)
 						saveConfig()
 						saveAppConfig(app)
 						term.clear()
@@ -679,23 +690,24 @@ capi.cclogtable("start->enter->params", params)
 
 				end
 			
-			elseif currentPage == startPage and currentApp ~= nil and 
-			cursorStop == 2 or (cursorStop == 3 and _G[currentApp].getInfo ~= nil) then
+			elseif currentPage == startPage and currentApp ~= nil
+			and (cursorStop == 1 or (cursorStop == 2 and _G[currentApp].getInfo ~= nil) 
+			or cursorStop == #cursorStops -1) then
 			
-				if cursorStop == 2 then
+				if cursorStop == 1 then
 					if _G[currentApp] == nil then
 						drawHelpPage()
 					else
 						drawInfoPage()
 					end
+				elseif cursorStop == #cursorStops -1 then
+					drawDetailSlotsPage()
 				else
 					drawHelpPage()
 				end
-			
-			elseif currentPage == startPage and currentApp ~= nil and 
-			cursorStop == #cursorStops-1 then
-				drawDetailSlotsPage()
-			
+				drawBlankPage()
+				currentPage()
+				
 			elseif currentPage == appPage then
 			
 				currentApp = apps[cursorStop]
@@ -727,12 +739,12 @@ capi.cclogtable("start->miscPage->miscFunctions", miscFunctions)
 				setCursor(cursorStop)
 				io.write("        ")
 				setCursor(cursorStop)
-				printStatus("Input value for '"..app.params[cursorStop][1].."'")
+				printStatus("Input value for '"..app.params[cursorStop -paramsOffset][1].."'")
 				local input = capi.rawInput(char)
-				app.params[cursorStop][2] = input
+				app.params[cursorStop -paramsOffset][2] = input
 				setCursor(cursorStop)
-				printStatus("Param set to: "..app.params[cursorStop][2])
-			
+				printStatus("Param set to: "..app.params[cursorStop -paramsOffset][2])
+capi.cclog("start->input->"..app.params[cursorStop -paramsOffset][1].."->'"..input.."'")
 			elseif currentPage == miscPage then
 				if cursorStop < 4 then
 					setCursor(cursorStop)
