@@ -537,8 +537,9 @@ capi.cclog("miscPage->")
 	sprint("]", 39, 1)
 	
 	cursorStops = {}
-		
-	sprint(system.type.."("..os.getComputerID()..") \""..os.getComputerLabel().."\"", 1, 2)
+	local id = os.getComputerID() ~= nil and os.getComputerID() or "no_id"
+	local label = os.getComputerLabel() ~= nil and os.getComputerLabel() or "no_label"
+	sprint(system.type.."("..id..") \""..label.."\"", 1, 2)
 	if system.type == "Turtle" then
 		system.fuel = turtle.getFuelLevel()
 		io.write(", Fuel: "..system.fuel)

@@ -7,6 +7,92 @@
 -- and are accessible through the variables
 -- commonAPI and turtleAPI.
 
+-- function stubs to copy/paste
+--getInfo = function()
+--	
+--	local info = {}
+----3456789012345678901234567890123456789
+--info[1] =
+--[[This is the first line. Line breaks
+--will be produced as written here.
+--Explain what is important to know.]]
+--
+--info[2] =
+--[[To the point that even a total noob
+--can understand it.]]
+--	
+--	return info
+--
+--end
+--
+--
+--getArgs = function()
+--
+--  return {"arg1", "arg2"}
+--  
+--end
+--
+--
+--validateArgs = function(args)
+--	
+--	if args.arg1 ~= "what it should be" then return "error message" end
+--	
+--	if args.arg2 == "you're stupid" then return "I'm not stupid" end
+--	
+--	return true
+--	
+--end
+--
+--
+--getFuel = function()
+--  
+--  return #"of movements"
+--  
+--end
+--
+--
+--getSlots = function()
+--  
+--  local slots = {}
+--  
+--  table.insert(slots, {64, "Stone"})
+--  table.insert(slots, {56, "Wood"})
+--  table.insert(slots, {32, "Sand"})
+--  
+--  return slots
+--  
+--end
+--
+--
+--getDetailedSlots = function()
+--
+--	local slots = {}
+--	
+--	table.insert(slots, {"123456", "123456789", "123456789"})
+--	table.insert(slots, {"123456", "123456789", "123456789"})
+--	table.insert(slots, {"123456", "123456789", "123456789"})
+--	table.insert(slots, {"12345", "12345678", "12345678"})
+--	
+--	return slots
+--
+--end
+--
+--
+--validateSlots = function()
+--
+--	return "builtInExact"
+--	--return "builtInSum"
+--	-- return true/false (own calculation)
+--
+--end
+--
+--
+--runApp = function()
+--
+--	
+--
+--end
+
 
 -- Return a table of strings to describe your app's functionality.
 -- Each string must have 12 lines and 39 chars per line.
@@ -31,6 +117,7 @@ end
 
 -- Return a table of names of required args that will be prompted to the user.
 -- This is the first call after the user called the app.
+-- Only use letters thet are legal for variable names.
 getArgs = function()
 
   return {"arg1", "arg2"}
