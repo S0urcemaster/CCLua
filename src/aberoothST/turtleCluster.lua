@@ -137,7 +137,7 @@ runApp = function()
 						modem.transmit(turtle.channel, 0, textutils.serialize({action = action, timeout = timeout}))
 					end
 					
-					sleep(0.2)
+					sleep(0.3)
 					term.redirect(monitor)
 					gui.drawUnclickedButton(buttons[bIndex])
 					term.restore()
@@ -180,7 +180,7 @@ runApp = function()
 		repeat
 			event, modemSide, senderChannel, replyChannel, message, senderDistance = os.pullEvent("modem_message")
 			local mess = textutils.unserialize(message)
-			local sleeptime = 0.1
+			local sleeptime = 0.2
 			local timeout = mess.timeout
 			
 			if mess.action == "forward" then
