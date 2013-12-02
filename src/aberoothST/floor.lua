@@ -84,7 +84,7 @@ runApp = function()
 	tapi.placeDown()
 	
 	
-	if capi.isOdd(breite) then
+	if capi.isOdd(width) then
 	  tapi.justify(180)
 	  for y = 1, length-1 do
 	    

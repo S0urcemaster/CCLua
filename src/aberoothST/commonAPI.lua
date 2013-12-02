@@ -75,6 +75,7 @@ tableToString = function(t)
 	return s
 end
 
+
 -- returns the ComputerCraft keyboard codes as a table
 getKeyTable = function()
   return keytable
@@ -313,9 +314,19 @@ isInteger = function(n)
   return n == math.floor(n)
 end
 
--- returns -1 for numbers < 0 and 1 for 0 and > 0  
+-- returns -1 for numbers < 0, 1 for > 0 and 0 for 0
 -- Thx to rv55
 sign = function(x)
-  return (x<0 and -1) or 1
+	if x == 0 then return 0 end
+  return x < 0 and -1 or 1
 end
+
+
+-- returns the greater of two numbers or the second if equal
+max = function(a, b)
+	return a > b and a or b
+end
+
+
+
 
