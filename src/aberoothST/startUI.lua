@@ -78,6 +78,8 @@ os.loadAPI("turtleAPI")
 local tapi = turtleAPI
 os.loadAPI("guiAPI")
 
+os.loadAPI("geom")
+
 shell.run("globals")
 
 capi.setLog(logging)
@@ -739,8 +741,8 @@ capi.cclogtable("start->miscPage->miscFunctions", miscFunctions)
 					return
 				elseif cursorStop == #cursorStops then
 					
-				elseif cursorStop > 8 +miscStopsOffset and cursorStop < #cursorStops-1 then
-					_G[miscFunctions[cursorStop-3]]()
+				elseif cursorStop > 7 +miscStopsOffset and cursorStop < #cursorStops-1 then
+					_G[miscFunctions[cursorStop -7 -miscStopsOffset]]()
 					drawBlankPage()
 					currentPage()
 					
@@ -748,8 +750,7 @@ capi.cclogtable("start->miscPage->miscFunctions", miscFunctions)
 			end
 			
 		-- parameter input
-		elseif currentPage == startPage and cursorStop ~= #cursorStops and
-		(capi.isNumberKey(key) or capi.isLetterKey(key)
+		elseif cursorStop ~= #cursorStops and (capi.isNumberKey(key) or capi.isLetterKey(key)
 		or key == capi.getKeyTable().MINUS) then
 			if currentPage == startPage then
 				local app = _G[currentApp]
@@ -764,7 +765,7 @@ capi.cclogtable("start->miscPage->miscFunctions", miscFunctions)
 				printStatus("Param set to: "..app.params[cursorStop -paramsOffset][2])
 capi.cclog("start->input->"..app.params[cursorStop -paramsOffset][1].."->'"..input.."'")
 			elseif currentPage == miscPage then
-				if cursorStop < 8 +miscStopsOffset then
+				if cursorStop <= 7 +miscStopsOffset then
 					setCursor(cursorStop)
 					io.write("        ")
 					setCursor(cursorStop)

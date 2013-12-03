@@ -9,8 +9,8 @@ function make3dPoint(x, z, y)
 end
 
 
-make2dPoint = function(x, y)
-	return {x = x, y = y}
+make2dPoint = function(x, z)
+	return {x = x, z = z}
 end
 
 
@@ -140,39 +140,39 @@ line2dBres = function(p1, p2)
 	
 	local x1 = p1.x
 	local x2 = p2.x
-	local y1 = p1.y
-	local y2 = p2.y
+	local z1 = p1.z
+	local z2 = p2.z
 	
 	local dx = math.abs(x2 - x1)
-	local dy = math.abs(y2 - y1)
+	local dz = math.abs(z2 - z1)
 	
-	local sx, sy
+	local sx, sz
 	
 	if x1 < x2 then sx = 1 else sx = -1 end
-	if y1 < y2 then sy = 1 else sy = -1 end
+	if z1 < z2 then sz = 1 else sz = -1 end
 	
-	local err = dx -dy
+	local err = dx -dz
 	
 	while true do
 	
-		table.insert(points, make2dPoint(x1, y1))
+		table.insert(points, make2dPoint(x1, z1))
 		
-		if x1 == x2 and y1 == y2 then break end
+		if x1 == x2 and z1 == z2 then break end
 		
 		local e2 = 2*err
-		if e2 > -dy then
-			err = err - dy
+		if e2 > -dz then
+			err = err - dz
 			x1 = x1 + sx
 		end
 		
-		if x1 == x2 and y1 == y2 then
-			table.insert(points, make2dPoint(x1, y1))
+		if x1 == x2 and z1 == z2 then
+			table.insert(points, make2dPoint(x1, z1))
 			break
 		end
 		
 		if e2 < dx then
 			err = err +dx
-			y1 = y1 +sy
+			z1 = z1 +sz
 		end
 	
 	end
@@ -250,7 +250,8 @@ end
 
 
 -- Get points table forming the outline of a square.
--- The points are ordered circular from p1 back to p1.
+-- The points are ordered circular from p1 back to p1
+-- following p1->z->x->p2->z->x.
 function square2dOutline(p1, p2)
   
   local points = {}
@@ -258,43 +259,38 @@ function square2dOutline(p1, p2)
   local linePoints = {}
   
   -- 1
-  linePoints = line2dBres(p1, make2dPoint(p1.x, p2.y -1))
+  local subx = capi.sign(p2.x - p1.x)
+  local subz = capi.sign(p2.z - p1.z)
   
-  	print("1")
+  linePoints = line2dBres(p1, make2dPoint(p1.x, p2.z -subz))
+  
   for _, v in ipairs(linePoints) do
   
-  	print(v.x.." "..v.y)
   	table.insert(points, v)
   
   end
   
   -- 2
-  	print("2")
-  linePoints = line2dBres(make2dPoint(p1.x, p2.y), make2dPoint(p2.x - 1, p2.y))
+  linePoints = line2dBres(make2dPoint(p1.x, p2.z), make2dPoint(p2.x -subx, p2.z))
   
   for _, v in ipairs(linePoints) do
   
-  	print(v.x.." "..v.y)
   	table.insert(points, v)
   
   end
   
   -- 3
-  linePoints = line2dBres(p2, make2dPoint(p2.x, p1.y +1))
+  linePoints = line2dBres(p2, make2dPoint(p2.x, p1.z +subz))
   
-  	print("3- "..p1.y)
   for _, v in ipairs(linePoints) do
-  	print(v.x.." "..v.y)
   	table.insert(points, v)
   
   end
   
   -- 4
-  linePoints = line2dBres(make2dPoint(p2.x, p1.y), make2dPoint(p1.x +1, p1.y))
+  linePoints = line2dBres(make2dPoint(p2.x, p1.z), make2dPoint(p1.x +subx, p1.z))
   
-  	print("4")
   for _, v in ipairs(linePoints) do
-  	print(v.x.." "..v.y)
   	table.insert(points, v)
   
   end

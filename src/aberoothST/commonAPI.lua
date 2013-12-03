@@ -322,6 +322,14 @@ sign = function(x)
 end
 
 
+-- returns -1 for numbers < 0 and 1 for >= 0
+-- Thx to rv55
+signZero = function(x)
+	if x == 0 then return 0 end
+  return x < 0 and -1 or 1
+end
+
+
 -- returns the greater of two numbers or the second if equal
 max = function(a, b)
 	return a > b and a or b

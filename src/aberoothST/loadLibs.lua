@@ -5,7 +5,8 @@ local dir = "C:/Users/adm9/Documents/GitHub/CCLua/src/aberoothST/"
 
 local libs = {
 "commonAPI",
-"turtleAPI"
+"turtleAPI",
+"geom"
 }
 
 loadLibs = function()

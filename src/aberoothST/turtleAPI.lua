@@ -1,4 +1,7 @@
 -- Turtle API
+-- Functions for controlling turtles.
+
+local capi = commonAPI
 
 local maxmoblife = 20
 local dmgpickaxe = 3
@@ -19,6 +22,9 @@ coords = makeBlankCoords()
 mccoords = {south = 0, west = 1, north = 2, east = 3,
 						[0] = "south", [1] = "west", [2] = "north", [3] = "east",
 						eastsign = 1, westsign = -1, southsign = 1, northsign = -1}
+--     -
+--   - o +
+--     +
 						
 dir2deg = {north = 0, east = 90, south = 180, west = 270}
 
@@ -77,10 +83,10 @@ forward = function()
 			end
 		end
 	end
-	
+print("x:"..coords.x.." z:"..coords.z.." v:"..coords.v.." ->forward")
 	local axis = deg2axis[coords.v]
 	coords[axis] = coords[axis] + deg2sign[coords.v]
-
+print("-> x:"..coords.x.." z:"..coords.z.." v:"..coords.v)
 end
 
 
@@ -208,7 +214,6 @@ end
 -- Enforces turtle.place()
 place = function(slot)
   slot = slot or 1
-  nextSlot(slot)
 	if not turtle.place() then
 		local counter = 0
 		
@@ -233,7 +238,6 @@ end
 -- Enforces turtle.placeUp()
 placeUp = function(slot)
   slot = slot or 1
-  nextSlot(slot)
 	if not turtle.placeUp() then
 		local counter = 0
 		nextSlot(slot)
@@ -259,7 +263,6 @@ end
 -- Enforces turtle.placeDown()
 placeDown = function(slot)
   slot = slot or 1
-  nextSlot(slot)
 	if not turtle.placeDown() then
 		local counter = 0
 		
@@ -369,39 +372,42 @@ end
 -- if nil, tapi.forward()/ up()/ down() are used
 -- z can be left out when only moving on x/z
 moveTo = function(x, z, y, fForward, fUp, fDown)
-  z = z or 1
+  y = y or 0
   fForward = fForward or forward
   fUp = fUp or up
   fDown = fDown or down
-  
+--print(x.." "..z.." "..y)
 	local vTo = vector.new(x, z, y)
 	local vFrom = vector.new(coords.x, coords.z, coords.y)
-	local vDelta = vTo - vFrom
---print("Coords: "..coords.x.." "..coords.y.." "..coords.z.."  Delta: "..delta.x.." "..delta.y.." "..delta.z)
-	if vDelta.y ~= 0 then
-		if capi.sign(vDelta.y) == 1 then
-			justify(0)
-		else
+--print(vTo)
+--print(vFrom)
+	local vSub = vTo - vFrom
+	local vDelta = vector.new(vSub.x, vSub.z, vSub.y)
+--print("Coords: "..coords.x.." "..coords.z.." "..coords.y.."  Delta: "..vDelta.x.." "..vDelta.z.." "..vDelta.y)
+	if vDelta.z ~= 0 then
+		if capi.sign(vDelta.z) == 1 then
 			justify(180)
+		else
+			justify(0)
 		end
-		for b = capi.sign(vDelta.y), vDelta.y, capi.sign(vDelta.y) do
+		for b = capi.sign(vDelta.z), vDelta.z, capi.sign(vDelta.z) do
 			fForward()
 		end
 	end
 	if vDelta.x ~= 0 then
 		if capi.sign(vDelta.x) == 1 then
-			justifj(270)
-		else
 			justify(90)
+		else
+			justify(270)
 		end
 		for a = capi.sign(vDelta.x), vDelta.x, capi.sign(vDelta.x) do
 			fForward()
 		end
 	end
 	
-	if vDelta.z ~= 0 then
-		for c = capi.sign(vDelta.z), vDelta.z, capi.sign(vDelta.z) do
-			if vDelta.z > 0 then
+	if vDelta.y ~= 0 then
+		for c = capi.sign(vDelta.y), vDelta.y, capi.sign(vDelta.y) do
+			if vDelta.y > 0 then
 				fUp()
 			else
 				fDown()
@@ -411,6 +417,7 @@ moveTo = function(x, z, y, fForward, fUp, fDown)
 end
 
 -- moveTo without damaging anything and simple way finder
+-- will no more work. out of focus.
 softMoveTo = function(x, y, z)
   z = z or 1
   
