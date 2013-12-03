@@ -73,8 +73,9 @@ If you do not want this, install
 manually or make a backup.]]
 
 os.loadAPI("commonAPI")
-os.loadAPI("turtleAPI")
 local capi = commonAPI
+os.loadAPI("turtleAPI")
+local tapi = turtleAPI
 os.loadAPI("guiAPI")
 
 shell.run("globals")
@@ -86,7 +87,7 @@ local configFilename = "startui.cfg"
 
 local system = {}
 system.type = "Computer"
-system.coords = {x = 0, z = 0, y = 0}
+system.coords = {x = 0, z = 0, y = 0, v = 0, offsetx = 0, offsetz = 0, offsety = 0}
 system.fuel = nil
 
 local appDir = "_apps"
@@ -103,6 +104,8 @@ local pageItems = {}
 local cursorStops = {}
 local cursorStop = 1
 local paramsOffset = 1
+
+local miscStopsOffset = 1
 
 
 local loadConfig = function()
@@ -545,13 +548,21 @@ capi.cclog("miscPage->")
 		io.write(", Fuel: "..system.fuel)
 	end
 	
+	sprint("Help", 36, 2)
+	table.insert(cursorStops, {x = 36, y = 2})
+	miscStopsOffset = 1
+	
 	local coords = {}
 	coords[1] = {"x", system.coords.x}
 	coords[2] = {"z", system.coords.z}
 	coords[3] = {"y", system.coords.y}
+	coords[4] = {"v", system.coords.v}
+	coords[5] = {"offsx", system.coords.offsetx}
+	coords[6] = {"offsz", system.coords.offsetz}
+	coords[7] = {"offsy", system.coords.offsety}
 	drawAttributeList(coords, 3)
 
-	drawSelectionList(miscFunctions, 5)
+	drawSelectionList(miscFunctions, 7)
 	
 	sprint("exit", 36, 12)
 	table.insert(cursorStops, {x = 36, y = 12})
@@ -559,6 +570,7 @@ capi.cclog("miscPage->")
 	table.insert(cursorStops, {x = 1, y = 13})
 
 end
+
 
 -- set cursorStop
 local setCursor = function(pos)
@@ -573,6 +585,7 @@ capi.cclog("setCursor-> "..pos)
   end
   
 end
+
 
 local start = function()
 
@@ -720,13 +733,17 @@ capi.cclogtable("start->enter->save config->app", app)
 			elseif currentPage == miscPage then
 capi.cclogtable("start->miscPage->miscFunctions", miscFunctions)
 				if cursorStop == #cursorStops - 1 then
+					-- exit
 					term.clear()
 					term.setCursorPos(1, 1)
 					return
 				elseif cursorStop == #cursorStops then
 					
-				elseif cursorStop > 3 and cursorStop < #cursorStops-1 then
+				elseif cursorStop > 8 +miscStopsOffset and cursorStop < #cursorStops-1 then
 					_G[miscFunctions[cursorStop-3]]()
+					drawBlankPage()
+					currentPage()
+					
 				end
 			end
 			
@@ -747,22 +764,50 @@ capi.cclogtable("start->miscPage->miscFunctions", miscFunctions)
 				printStatus("Param set to: "..app.params[cursorStop -paramsOffset][2])
 capi.cclog("start->input->"..app.params[cursorStop -paramsOffset][1].."->'"..input.."'")
 			elseif currentPage == miscPage then
-				if cursorStop < 4 then
+				if cursorStop < 8 +miscStopsOffset then
 					setCursor(cursorStop)
 					io.write("        ")
 					setCursor(cursorStop)
 					local input = capi.rawInput(char)
-					if tonumber(input) == nil then
+					
+					if cursorStop == 4 +miscStopsOffset then
+						if input == "north" or input == "east" or input == "south" or input == "west" then
+							system.coords.v = tapi.coordsdeg[input]
+						elseif input == "n" then
+							system.coords.v = tapi.coordsdeg["north"]
+						elseif input == "e" then
+							system.coords.v = tapi.coordsdeg["east"]
+						elseif input == "s" then
+							system.coords.v = tapi.coordsdeg["south"]
+						elseif input == "w" then
+							system.coords.v = tapi.coordsdeg["west"]
+						elseif tonumber(input) ~= nil then
+							-- mc degree?
+							local num = tonumber(input)
+							if num >= 0 and num <= 3 then
+								system.coords.v = coordsdeg[mccoords[num]]
+							end
+						else
+							printStatus("Unknown direction. Read help.")
+						end
+					elseif tonumber(input) == nil then
 						printStatus("Must be a number")
 						drawBlankPage()
 						currentPage()
 					else
-						if cursorStop == 1 then
+						if cursorStop == 1 +miscStopsOffset then
 							system.coords.x = tonumber(input)
-						elseif cursorStop == 2 then
+						elseif cursorStop == 2 +miscStopsOffset then
 							system.coords.z = tonumber(input)
-						elseif cursorStop == 3 then
+						elseif cursorStop == 3 +miscStopsOffset then
 							system.coords.y = tonumber(input)
+
+						elseif cursorStop == 5 +miscStopsOffset then
+							system.coords.offsetx = tonumber(input)
+						elseif cursorStop == 6 +miscStopsOffset then
+							system.coords.offsetz = tonumber(input)
+						elseif cursorStop == 7 +miscStopsOffset then
+							system.coords.offsety = tonumber(input)
 						end
 					end
 					setCursor(cursorStop)

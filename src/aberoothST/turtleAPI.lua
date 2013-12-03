@@ -8,23 +8,28 @@ local maxFloatingBlockCount = 15
 
 local orientation = "l" -- "l" left / "r" right
 
-local coords = {x=1, y=1, z=1, v=0}
--- lokales Koordinatensystem der Turtle
--- v ist blickrichtung 0:Nord/+y, 270:West/+x, 180:sued/-y, 90:Ost/-x
-coords.y = 1 -- Annahme: turtle steht am Anfang 1 ausserhalb des Bereichs
--- xxx|
--- xxx|
--- --T--- y=0
---    |
---    |
---   x=0
+makeBlankCoords = function()
 
-getCoords = function()
-
-	return coords
+	return {x = 0, z = 0, y = 0, v = 0}
 
 end
 
+coords = makeBlankCoords()
+
+mccoords = {south = 0, west = 1, north = 2, east = 3,
+						[0] = "south", [1] = "west", [2] = "north", [3] = "east",
+						eastsign = 1, westsign = -1, southsign = 1, northsign = -1}
+						
+dir2deg = {north = 0, east = 90, south = 180, west = 270}
+
+deg2sign = {[dir2deg.north] = mccoords.northsign, 
+							[dir2deg.east] = mccoords.eastsign,
+							[dir2deg.south] = mccoords.southsign,
+							[dir2deg.west] = mccoords.westsign}
+deg2axis = {[dir2deg.north] = "z",
+							[dir2deg.south] = "z",
+							[dir2deg.east] = "x",
+							[dir2deg.west] = "x"}
 
 -- simple turtle.turnLeft storing the angle in coords.v
 turnLeft = function()
@@ -42,7 +47,8 @@ turnRight = function()
 		
 end
 
--- turtle.forward() using dig and attack to clear the way
+-- turtle.forward() using dig and attack to clear the way.
+-- If that doesn't help, fuel is also being checkd.
 forward = function()
 	if not turtle.forward() then
 		local counter = 0
@@ -59,15 +65,61 @@ forward = function()
 				turtle.attack()
 				counter = counter + 1
 				if counter == maxAttackCount then
-					error("Cannot move forward")
+					if turtle.getFuelLevel() == 0 then
+						print("No fuel.")
+						print("Put fuel in active slot and press key")
+						capi.pullKey()
+						turtle.refuel()
+					else
+						error("Cannot move forward")
+					end
 				end
 			end
 		end
 	end
-	local d = coords.v == 0 and 1 or coords.v == 180 and -1 or 0
-	coords.y = coords.y + d
-	d = coords.v == 270 and 1 or coords.v == 90 and -1 or 0
-	coords.x = coords.x + d
+	
+	local axis = deg2axis[coords.v]
+	coords[axis] = coords[axis] + deg2sign[coords.v]
+
+end
+
+
+-- turtle.back() using dig and attack to clear the way
+-- If that doesn't help, fuel is also being checkd.
+back = function()
+	if not turtle.back() then
+		local counter = 0
+		turnLeft()
+		turnLeft()
+		repeat
+			turtle.dig()
+			counter = counter + 1
+			if counter == maxFloatingBlockCount then break end
+		until turtle.forward()
+		
+		if counter == maxFloatingBlockCount then
+			counter = 0
+			while not turtle.forward() do
+				turtle.attack()
+				counter = counter + 1
+				if counter == maxAttackCount then
+					if turtle.getFuelLevel() == 0 then
+						print("No fuel.")
+						print("Put fuel in active slot and press key")
+						capi.pullKey()
+						turtle.refuel()
+					else
+						error("Cannot move backward")
+					end
+				end
+			end
+		end
+		turnRight()
+		turnRight()
+	end
+	
+	local axis = deg2axis[coords.v]
+	coords[axis] = coords[axis] - deg2sign[coords.v]
 
 end
 
@@ -88,7 +140,16 @@ up = function()
 			while not turtle.up() do
 				turtle.attackUp()
 				counter = counter + 1
-				if counter == maxAttackCount then error("Cannot move up") end
+				if counter == maxAttackCount then
+					if turtle.getFuelLevel() == 0 then
+						print("No fuel.")
+						print("Put fuel in active slot and press key")
+						capi.pullKey()
+						turtle.refuel()
+					else
+						error("Cannot move up")
+					end
+				end
 			end
 		end
 	end
@@ -111,44 +172,20 @@ down = function()
 			while not turtle.down() do
 				turtle.attackDown()
 				counter = counter + 1
-				if counter == maxAttackCount then error("Cannot move down") end
+				if counter == maxAttackCount then
+					if turtle.getFuelLevel() == 0 then
+						print("No fuel.")
+						print("Put fuel in active slot and press key")
+						capi.pullKey()
+						turtle.refuel()
+					else
+						error("Cannot move down")
+					end
+				end
 			end
 		end
 	end
 	coords.z = coords.z - 1
-end
-
--- turtle.back() using dig and attack to clear the way
-back = function()
-	if not turtle.back() then
-		local counter = 0
-		turnLeft()
-		turnLeft()
-		repeat
-			turtle.dig()
-			counter = counter + 1
-			if counter == maxFloatingBlockCount then break end
-		until turtle.forward()
-		
-		if counter == maxFloatingBlockCount then
-			counter = 0
-			while not turtle.forward() do
-				turtle.attack()
-				counter = counter + 1
-				if counter == maxAttackCount then
-					turnLeft()
-					turnLeft()
-					error("Cannot move back")
-				end
-			end
-		end
-		turnRight()
-		turnRight()
-	end
-	local d = coords.v == 0 and 1 or coords.v == 180 and -1 or 0
-	coords.y = coords.y - d
-	d = coords.v == 270 and 1 or coords.v == 90 and -1 or 0
-	coords.x = coords.x - d
 end
 
 -- turtle.digUp() clearing floating blocks
@@ -161,7 +198,7 @@ digUp = function()
 
 end
 
--- till now only wraps turtle.digDown()
+-- Nothing to worry about turtle.digDown()
 digDown = function()
 
 	turtle.digDown()
@@ -256,15 +293,6 @@ nextSlot = function(n)
 	end
 end
 
--- ??? function uncommon
-selectSlotNotEmpty = function(n)
-
-	turtle.select(n)
-	if turtle.getItemCount(n) == 0 then return false end
-	return true
-
-end
-
 
 -- sets the orientation on which left() and right() operate on
 setOrientation = function(lr)
@@ -293,26 +321,26 @@ rightO = function()
 
 end
 
--- turn to 0/90/180/270 degrees
-justify = function(richtung)
-	local drehung = rotation(coords.v, richtung)
-	if drehung > 0 then	turnRight()
-		if drehung > 90 then turnRight()
+-- turn to direction, 0/90/180/270 degrees
+justify = function(dir)
+	local rot = rotation(coords.v, dir)
+	if rot > 0 then	turnRight()
+		if rot > 90 then turnRight()
 		end
-	elseif drehung < 0 then turnLeft()
-		if drehung < -90 then turnLeft()
+	elseif rot < 0 then turnLeft()
+		if rot < -90 then turnLeft()
 		end
 	end
 end
 
--- ??? relic?
-faceWithOrientation = function(richtung)
+-- used with 180 degrees turn in relative x direction
+faceWithOrientation = function(dir)
 
 	if orientation == "r" then
-		if richtung == 90 then richtung = 270
-		elseif richtung == 270 then richtung = 90 end
+		if dir == 90 then dir = 270
+		elseif dir == 270 then dir = 90 end
 	end
-	justify(richtung)
+	justify(dir)
 
 end
 
@@ -331,49 +359,49 @@ rotation = function(start, ziel)
   
   if math.abs(diff) == 270 then return -diff/3 end
   
-  
   return diff
 
 end
 
 
--- move to x,y,z with the turtle placment block as origin (0,0,0)
+-- move to x,y,z with the turtle bottom block as origin (0,0,0)
 -- fForward, fUp, fDown are the functions to use when moving
--- if nil, forward(), up(), down() are used
-moveTo = function(x, y, z, fForward, fUp, fDown)
+-- if nil, tapi.forward()/ up()/ down() are used
+-- z can be left out when only moving on x/z
+moveTo = function(x, z, y, fForward, fUp, fDown)
   z = z or 1
   fForward = fForward or forward
   fUp = fUp or up
   fDown = fDown or down
   
-	local nach = vector.new(x, y, z)
-	local von = vector.new(coords.x, coords.y, coords.z)
-	delta = nach - von
+	local vTo = vector.new(x, z, y)
+	local vFrom = vector.new(coords.x, coords.z, coords.y)
+	local vDelta = vTo - vFrom
 --print("Coords: "..coords.x.." "..coords.y.." "..coords.z.."  Delta: "..delta.x.." "..delta.y.." "..delta.z)
-	if delta.y ~= 0 then
-		if capi.sign(delta.y) == 1 then
+	if vDelta.y ~= 0 then
+		if capi.sign(vDelta.y) == 1 then
 			justify(0)
 		else
 			justify(180)
 		end
-		for b = capi.sign(delta.y), delta.y, capi.sign(delta.y) do
+		for b = capi.sign(vDelta.y), vDelta.y, capi.sign(vDelta.y) do
 			fForward()
 		end
 	end
-	if delta.x ~= 0 then
-		if capi.sign(delta.x) == 1 then
+	if vDelta.x ~= 0 then
+		if capi.sign(vDelta.x) == 1 then
 			justifj(270)
 		else
 			justify(90)
 		end
-		for a = capi.sign(delta.x), delta.x, capi.sign(delta.x) do
+		for a = capi.sign(vDelta.x), vDelta.x, capi.sign(vDelta.x) do
 			fForward()
 		end
 	end
 	
-	if delta.z ~= 0 then
-		for c = capi.sign(delta.z), delta.z, capi.sign(delta.z) do
-			if delta.z > 0 then
+	if vDelta.z ~= 0 then
+		for c = capi.sign(vDelta.z), vDelta.z, capi.sign(vDelta.z) do
+			if vDelta.z > 0 then
 				fUp()
 			else
 				fDown()
@@ -386,19 +414,19 @@ end
 softMoveTo = function(x, y, z)
   z = z or 1
   
-	local to = vector.new(x, y, z)
-	local from = vector.new(coords.x, coords.y, coords.z)
-	delta = to - from
-print("Coords: "..coords.x.." "..coords.y.." "..coords.z.."  Delta: "..delta.x.." "..delta.y.." "..delta.z)
+	local vTo = vector.new(x, y, z)
+	local vFrom = vector.new(coords.x, coords.y, coords.z)
+	local vDelta = vTo - vFrom
+--print("Coords: "..coords.x.." "..coords.y.." "..coords.z.."  Delta: "..delta.x.." "..delta.y.." "..delta.z)
 
   
-  while delta.x ~= 0 or delta.y ~= 0 or delta.z ~= 0 do
+  while vDelta.x ~= 0 or vDelta.y ~= 0 or vDelta.z ~= 0 do
     
-    moved = false
+    local moved = false
     
-    if delta.x ~= 0 then
+    if vDelta.x ~= 0 then
       
-      if capi.sign(delta.x) == 1 then
+      if capi.sign(vDelta.x) == 1 then
         justify(270)
       else
         justify(90)
@@ -406,14 +434,14 @@ print("Coords: "..coords.x.." "..coords.y.." "..coords.z.."  Delta: "..delta.x..
       
       if turtle.forward() then
         moved = true
-        coords.x = coords.x + capi.sign(delta.x)
-        delta.x = delta.x - capi.sign(delta.x)
+        coords.x = coords.x + capi.sign(vDelta.x)
+        vDelta.x = vDelta.x - capi.sign(vDelta.x)
       end
       
     end
-    if not moved and delta.y ~= 0 then
+    if not moved and vDelta.y ~= 0 then
       
-      if capi.sign(delta.y) == 1 then
+      if capi.sign(vDelta.y) == 1 then
         justify(0)
       else
         justify(180)
@@ -421,24 +449,24 @@ print("Coords: "..coords.x.." "..coords.y.." "..coords.z.."  Delta: "..delta.x..
       
       if turtle.forward() then
         moved = true
-        coords.y = coords.y + capi.sign(delta.y)
-        delta.y = delta.y - capi.sign(delta.y)
+        coords.y = coords.y + capi.sign(vDelta.y)
+        vDelta.y = vDelta.y - capi.sign(vDelta.y)
       end
       
     end
-    if not moved and delta.z ~= 0 then
+    if not moved and vDelta.z ~= 0 then
       
-      if delta.z > 0 then
+      if vDelta.z > 0 then
         if turtle.up() then
           moved = true
-          coords.z = coords.z + capi.sign(delta.z)
-          delta.z = delta.z - capi.sign(delta.z)
+          coords.z = coords.z + capi.sign(vDelta.z)
+          vDelta.z = vDelta.z - capi.sign(vDelta.z)
         end
       else
         if turtle.down() then
           moved = true
-          coords.z = coords.z + capi.sign(delta.z)
-          delta.z = delta.z - capi.sign(delta.z)
+          coords.z = coords.z + capi.sign(vDelta.z)
+          vDelta.z = vDelta.z - capi.sign(vDelta.z)
         end
       end
     end
