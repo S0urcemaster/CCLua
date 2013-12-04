@@ -24,15 +24,17 @@ local apis = {
 	{"commonAPI", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/commonAPI.lua"},
 	{"startUI", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/startUI.lua"},
 	{"turtleAPI", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/turtleAPI.lua"},
-	{"guiAPI", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/guiAPI.lua"}
+	{"guiAPI", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/guiAPI.lua"},
+	{"geom", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/geom.lua"}
+	
 }
 
 local apps = {
 	{"menuDummy", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/menuDummy.lua"},
 	{"weather", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/weather.lua"},
 	{"floor", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/floor.lua"},
-	{"cluster", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/turtleCluster.lua"}
-	--{"floor", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/floor.lua"}
+	{"cluster", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/turtleCluster.lua"},
+	{"pattern", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/pattern.lua"}
 	--{"windingStairs", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/windingStairs.lua"}
 }
 

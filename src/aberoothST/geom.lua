@@ -252,6 +252,7 @@ end
 -- Get points table forming the outline of a square.
 -- The points are ordered circular from p1 back to p1
 -- following p1->z->x->p2->z->x.
+-- Minimum size: 2x2
 function square2dOutline(p1, p2)
   
   local points = {}

@@ -83,10 +83,10 @@ forward = function()
 			end
 		end
 	end
-print("x:"..coords.x.." z:"..coords.z.." v:"..coords.v.." ->forward")
+--print("x:"..coords.x.." z:"..coords.z.." v:"..coords.v.." ->forward")
 	local axis = deg2axis[coords.v]
 	coords[axis] = coords[axis] + deg2sign[coords.v]
-print("-> x:"..coords.x.." z:"..coords.z.." v:"..coords.v)
+--print("-> x:"..coords.x.." z:"..coords.z.." v:"..coords.v)
 end
 
 

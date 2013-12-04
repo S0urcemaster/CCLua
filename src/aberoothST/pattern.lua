@@ -23,7 +23,8 @@ orientation = bild left hand or right]]
 info[2] =
 [[The turtle will start moving up one
 block and place blocks at the level it
-was placed.]]
+was placed.
+Allows squares to be 1x1 or a line.]]
 	
 	return info
 
@@ -62,7 +63,8 @@ validateArgs = function(args)
   if outfill == "f" then
   	squareBlocks = sLength * sWidth
   else
-  	squareBlocks = 2 *(sLength -1) + 2 *(sWidth -1)
+  	squareBlocks = sLength *sWidth -(sLength -2) *(sWidth -2)
+  	if squareBlocks == 0 then squareBlocks = 1 end
   end
   
   blocks = squareBlocks *lCount *wCount
@@ -110,7 +112,7 @@ end
 
 runApp = function()
 
-	turtle.up()
+	--turtle.up()
 	
 	local xsign = tapi.orientation == "l" and -1 or 1
 	
@@ -122,13 +124,23 @@ runApp = function()
 			
 			local x2 = x1 +xsign *sWidth -xsign
 			local z2 = z1 -sLength +1
-			local squarePoints
+			local squarePoints = {}
 			
-			if outfill == "o" then
-				squarePoints = geom.square2dOutline(geom.make2dPoint(x1, z1), geom.make2dPoint(x2, z2))
+			if x1 == x2 and z1 == z2 then
+				print("1x1")
+				table.insert(squarePoints, geom.make2dPoint(x1, z1))
+			elseif x1 == x2 then
+				squarePoints = geom.line2dBres(geom.make2dPoint(x1, z1), geom.make2dPoint(x1, z2))
+			elseif z1 == z2 then
+				squarePoints = geom.line2dBres(geom.make2dPoint(x1, z1), geom.make2dPoint(x2, z1))
 			else
-				squarePoints = geom.square2dFill(geom.make2dPoint(x1, z1), geom.make2dPoint(x2, z2))
+				if outfill == "o" then
+					squarePoints = geom.square2dOutline(geom.make2dPoint(x1, z1), geom.make2dPoint(x2, z2))
+				else
+					squarePoints = geom.square2dFill(geom.make2dPoint(x1, z1), geom.make2dPoint(x2, z2))
+				end
 			end
+			
 capi.cclogtable(capi.tableToString(squarePoints))
 			for _, point in ipairs(squarePoints) do
 				tapi.moveTo(point.x, point.z)

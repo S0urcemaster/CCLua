@@ -6,6 +6,15 @@ local gui = guiAPI
 local clientserver = "server"
 local monitorLoc = "top"
 local modemLoc = "left"
+local activaLoc = "back"
+local switchLoc = "right"
+
+local buttonActiveIndex = 1
+
+-- quick solution to avoid greater changes
+local remoteActionsList = {
+	[1] = 1, [2] = 2, [3] = 4, [4] = 3, [5] = 6, [6] = 5
+}
 
 local sleeptime = 0.3
 
@@ -26,8 +35,36 @@ info[1] =
 you can control multiple turtles at the
 same time.
 Input monitorLoc and modemLoc on the
-server. The client does not need that.]]
+server. The client does not need that.
+clientserver = 'c' or 's' for client or
+server
+...Loc = location of peripherals: 'top'
+'left' 'right' 'front' 'back' 'bottom'
+Leave out if not present
+moninitorLoc = monitor location
+modemLoc = modem location]]
 
+info[2] =
+[[activaLoc = location of the wireless
+reciever to activate an action
+switchLoc = location of the wireless
+reciever to switch actions
+To use a wireless remote, you take 2
+of them. One is the activator to move
+the turtles, the other switches the
+commands in this order: forward>left>
+>right>up>down>back. If you activate
+the switch remote you move one step in
+the list. When you activate the activ
+ator then the list jumps back to]]
+
+info[3] = 
+[['forward' because you will need forw
+ard most. If you want to move the
+turtles forward>down>left>forward then
+you do for (a)activator and (s) switch:
+a>s>s>s>s>a>s>a>a.
+]]
 	
 	return info
 
@@ -36,7 +73,7 @@ end
 
 getArgs = function()
 
-  return {"clientserver", "monitorLoc", "modemLoc"}
+  return {"clientserver", "monitorLoc", "modemLoc", "activaLoc", "switchLoc"}
   
 end
 
@@ -119,9 +156,9 @@ runApp = function()
 		repeat
 		
 			local event = {os.pullEvent()}
+			
 			local x, y
 			if event[1] == "key" then
-				print("key: "..event[2])
 				if event[2] == 45 then break end
 			elseif event[1] == "monitor_touch" then
 				print("monitor touch at "..event[3].."/"..event[4])
@@ -160,6 +197,24 @@ runApp = function()
 					end
 
 				end
+				
+			elseif event[1] == "redstone" then
+				if rs.getInput(switchLoc) then
+					
+					buttonActiveIndex = (buttonActiveIndex +1) %7
+					if buttonActiveIndex == 0 then buttonActiveIndex = 1 end
+				elseif rs.getInput(activaLoc) then
+					
+					for _, turtl in ipairs(cluster) do
+						print("Sending '"..buttons[remoteActionsList[buttonActiveIndex]].action.."' to channel "..turtl.channel)
+						local action = buttons[remoteActionsList[buttonActiveIndex]].action
+						local timeout = #cluster
+						modem.transmit(turtl.channel, 0, textutils.serialize({action = action, timeout = timeout}))
+					end
+					buttonActiveIndex = 1
+					
+				end
+				
 			end
 			
 		
