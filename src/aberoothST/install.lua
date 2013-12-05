@@ -22,7 +22,7 @@ Press y to install or n to cancel>]]
 
 local apis = {
 	{"commonAPI", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/commonAPI.lua"},
-	{"startUI", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/startUI.lua"},
+	{"start", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/startUI.lua"},
 	{"turtleAPI", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/turtleAPI.lua"},
 	{"guiAPI", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/guiAPI.lua"},
 	{"geom", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/geom.lua"}
@@ -30,7 +30,6 @@ local apis = {
 }
 
 local apps = {
-	{"menuDummy", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/menuDummy.lua"},
 	{"weather", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/weather.lua"},
 	{"floor", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/floor.lua"},
 	{"cluster", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/turtleCluster.lua"},
