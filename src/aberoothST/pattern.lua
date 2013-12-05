@@ -112,7 +112,7 @@ end
 
 runApp = function()
 
-	--turtle.up()
+	turtle.up()
 	
 	local xsign = tapi.orientation == "l" and -1 or 1
 	

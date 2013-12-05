@@ -33,7 +33,8 @@ local apps = {
 	{"weather", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/weather.lua"},
 	{"floor", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/floor.lua"},
 	{"cluster", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/turtleCluster.lua"},
-	{"pattern", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/pattern.lua"}
+	{"pattern", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/pattern.lua"},
+	{"wall", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/wall.lua"}
 	--{"windingStairs", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/windingStairs.lua"}
 }
 
