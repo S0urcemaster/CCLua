@@ -26,7 +26,7 @@ local apis = {
 	{"turtleAPI", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/turtleAPI.lua"},
 	{"guiAPI", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/guiAPI.lua"},
 	{"geom", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/geom.lua"},
-	{"sorterAPI", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/sorter.lua"}
+	{"sorterAPI", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/sorterAPI.lua"}
 	
 }
 
