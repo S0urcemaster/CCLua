@@ -5,7 +5,7 @@ local capi = commonAPI
 local sortapi = sorterAPI
 
 local filename = "itemData"
-local saveDelay = 10
+local saveDelay = 60
 local delayCount = 0
 
 local args = {}
@@ -92,11 +92,17 @@ local function printScreen()
 	print("Time this session > ", hrs, "h ",min, "m ", sec, "s")
 	print()
 	
+	local totalItems = 0
+	
 	for i = 2, #itemData do
 		local s = string.format("%20s %6u", itemData[i].name, itemData[i].count)
 		print(s)
-	
+		totalItems = totalItems +itemData[i].count
 	end
+	print()
+	
+	
+	print("Items/Min: ", totalItems /itemData[1].count *60)
 	
 
 end
@@ -146,7 +152,7 @@ runApp = function()
 	local saveThread = coroutine.create(save)
 	coroutine.resume(saveThread)
 	
-	--printScreen()
+	printScreen()
 				
 	repeat
 		
