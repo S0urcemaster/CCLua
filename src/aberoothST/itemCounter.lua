@@ -70,8 +70,8 @@ end
 
 local function printScreen()
 	
-	--term.clear()
-	--term.setCursorPos(1, 1)
+	term.clear()
+	term.setCursorPos(1, 1)
 	
 	local hrs, min, mins, sec
 	
