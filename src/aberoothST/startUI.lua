@@ -80,7 +80,8 @@ os.loadAPI("guiAPI")
 
 os.loadAPI("geom")
 
-shell.run("globals")
+os.loadAPI("sorterAPI")
+
 
 capi.setLog(logging)
 capi.createNewLog()
@@ -750,7 +751,7 @@ capi.cclogtable("start->miscPage->miscFunctions", miscFunctions)
 			end
 			
 		-- parameter input
-		elseif cursorStop ~= #cursorStops and (capi.isNumberKey(key) or capi.isLetterKey(key)
+		elseif cursorStop ~= #cursorStops and cursorStop > paramsOffset and (capi.isNumberKey(key) or capi.isLetterKey(key)
 		or key == capi.getKeyTable().MINUS) then
 			if currentPage == startPage then
 				local app = _G[currentApp]

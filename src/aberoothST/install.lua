@@ -25,7 +25,8 @@ local apis = {
 	{"start", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/startUI.lua"},
 	{"turtleAPI", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/turtleAPI.lua"},
 	{"guiAPI", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/guiAPI.lua"},
-	{"geom", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/geom.lua"}
+	{"geom", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/geom.lua"},
+	{"sorterAPI", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/sorter.lua"}
 	
 }
 
@@ -34,8 +35,8 @@ local apps = {
 	{"floor", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/floor.lua"},
 	{"cluster", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/turtleCluster.lua"},
 	{"pattern", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/pattern.lua"},
-	{"wall", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/wall.lua"}
-	--{"windingStairs", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/windingStairs.lua"}
+	{"wall", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/wall.lua"},
+	{"iCounter", "https://raw.github.com/snhub/CCLua/master/src/aberoothST/itemCounter.lua"}
 }
 
 for i = 1, #pages do

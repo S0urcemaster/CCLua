@@ -24,6 +24,22 @@ local keytable = {
   HOME = 199, [199] = "HOME"
 }
 
+
+-- Replacement for sleep(s), which passes on events instead of dropping them
+-- computercraft wiki
+function wait(s)
+    local timer = os.startTimer(s)
+    while true do
+        local event, id = os.pullEvent("timer")
+        if id == timer then
+            break
+        else
+            os.queueEvent("timer", id)
+        end
+    end
+end
+
+
 local logFlag = false
 -- do the logging
 setLog = function(tf)
