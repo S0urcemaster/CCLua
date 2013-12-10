@@ -51,7 +51,6 @@ local toggleState = function(state, flag)
 end
 
 local hasState = function(state, flag)
-print("state: "..state..", flag: "..flag)
 	return bit.band(state, flag) == flag
 end
 
@@ -70,21 +69,25 @@ end
 local pushCluster = function(modem)
 
 	while true do
-		if #actionBuffer > 0 then
+		if actionBuffer[1] ~= nil then
+capi.cclog("T: actions there: "..#actionBuffer)
 			clusterBusyCounter = clusterSize
-print("coroutine pushing cluster")
 			for id,_ in pairs(cluster) do
+capi.cclog("T: sending to "..id.." : "..actionBuffer[1])
 				modem.transmit(id, 0, actionBuffer[1])
 			end
 			
 			local event, modemSide, senderChannel, replyChannel, message, senderDistance
-print(clusterBusyCounter)
+capi.cclog("T: Waiting for response")
 			while clusterBusyCounter > 0 do
+capi.cclog("T: Still busy: "..clusterBusyCounter)
 				coroutine.yield()
+				clusterBusyCounter = clusterBusyCounter -1
 			end
 			table.remove(actionBuffer, 1)
+capi.cclog("T: Action complete")
 		else
-print("Coroutine yielding")
+capi.cclog("T: Nothing to do")
 			coroutine.yield()
 		end
 	end
@@ -102,7 +105,26 @@ local sprint = function(text, x, y)
 end
 
 
-local printClientScreen = function(connected, status)
+local printServerScreen = function()
+
+	term.clear()
+	term.setCursorPos(1, 1)
+	print("TurtleCluster Server "..os.getComputerID())
+	print()
+	print("Cluster ids:")
+	for id, state in pairs(cluster) do
+		io.write(id.."("..state.."), ")
+	end
+	print()
+	print()
+	print("1 Broadcast relog")
+	print()
+
+
+end
+
+
+local printClientScreen = function(connected)
 
 	term.clear()
 	term.setCursorPos(1, 1)
@@ -125,7 +147,6 @@ local printClientScreen = function(connected, status)
 	print("3 - All on")
 	print("4 - Pivot ("..pivot..")")
 	print()
-	print(status)
 
 end
 
@@ -211,11 +232,11 @@ end
 
 
 runApp = function()
-
+	capi.setLog(true)
+capi.cclog("Stay alive logfile")
 	if clientserver == "s" then
 	
 		print("Here Server :)")
-		print("You can stop the server with 'x'")
 		local monitor = peripheral.wrap(monitorLoc)
 		if monitor then
 			gui.writeln("Monitor wrapped to "..monitorLoc)
@@ -250,40 +271,44 @@ runApp = function()
 		modem.open(2)
 		
 		repeat
-		
+			
+			printServerScreen()
+			
 			local event = {os.pullEvent()}
 			
-			local x, y
 			if event[1] == "key" then
-				if event[2] == keys.x then break end
+				
+				if event[2] == keys.one then
+capi.cclog("S: broadcasting relog")
+					modem.transmit(1, 0, serverMessage(serverAction.logon))
+				end
 
 			elseif event[1] == "modem_message" then
-print("modem message")
+capi.cclog("S: modem message: "..event[5])
 				local modemSide = event[2]
 				local senderChannel = event[3]
 				local replyChannel = event[4]
 				local message = event[5]
 				local senderDistance = event[6]
-print(message)
 				message = textutils.unserialize(message)
+				
 				if senderChannel == 2 then
+capi.cclog("S: client broadcast response "..message.data1)
 					if message.action == clientAction.logon then
-						print("Hello turtle "..message.data1)
 						addToCluster(message.data1, turtleStates.on)
-						modem.transmit(message.data1, 0, serverMessage(serverAction.logon, true))
 						modem.open(message.data1)
 					end
 				else
 				
 					if message.action == clientAction.onoff then
-						
+capi.cclog("S: client request on/off: "..senderChannel)
 						for id, _ in pairs(cluster) do
 							if id == senderChannel then
 								cluster[id] = toggleState(cluster[id], turtleStates.on)
 								break
 							end
 						end
-print("Sending switch onoff")
+capi.cclog("S: sending on/off")
 						modem.transmit(senderChannel, 0, serverMessage(serverAction.switchState, turtleStates.on))
 						
 					elseif message.action == clientAction.solo then
@@ -305,45 +330,38 @@ print("Sending switch onoff")
 						
 					elseif message.action == clientAction.ready then
 					
-						clusterBusyCounter = clusterBusyCounter -1
 						coroutine.resume(pushThread, modem)
 						
 					end
 				
 				end
 			elseif event[1] == "redstone" then
-			
+capi.cclog("S: redstone incoming")
 				if rs.getInput(switchLoc) then
-					
 					remoteAction = (remoteAction +1) %7
 					if remoteAction == 0 then remoteAction = 1 end
+capi.cclog("S: switch action: "..remoteAction)
 					
 				elseif rs.getInput(activaLoc) then
 					
-					io.write("Sending "..getServerActionFromRemote(remoteAction).." to channels: ")
-					for id, _ in pairs(cluster) do
-						io.write(id..", ")
-						local timeout = clusterSize
-						table.insert(actionBuffer, serverMessage(getServerActionFromRemote(remoteAction), timeout))
-					end
-					print()
+capi.cclog("S: activator action: "..remoteAction)
+					local timeout = clusterSize
+					table.insert(actionBuffer, serverMessage(getServerActionFromRemote(remoteAction), timeout))
 					remoteAction = 1
 					
 				end
 				
 			elseif event[1] == "monitor_touch" then
-				print("monitor touch at "..event[3].."/"..event[4])
+capi.cclog("S: monitor touch"..event[3].."/"..event[4])
 				local bIndex = gui.getButtonClickedIndex(buttons, event[3], event[4])
 				if bIndex ~= nil then
 					term.redirect(monitor)
 					gui.drawClickedButton(buttons[bIndex])
 					term.restore()
 					local serverAction = buttonToServerActionMapping[bIndex]
-					for channel, _ in pairs(cluster) do
-						print("Sending '"..serverAction.."' to channel "..channel)
-						local timeout = clusterSize
-						table.insert(actionBuffer, serverMessage(serverAction, timeout))
-					end
+capi.cclog("S: Queuing serverAction "..serverAction)
+					local timeout = clusterSize
+					table.insert(actionBuffer, serverMessage(serverAction, timeout))
 					
 sleep(sleeptime)
 					term.redirect(monitor)
@@ -354,7 +372,7 @@ sleep(sleeptime)
 			end
 			
 			if #actionBuffer > 0 then
-			
+capi.cclog("S: items in action buffer, resuming pushThread")
 				coroutine.resume(pushThread, modem)
 			
 			end
@@ -367,104 +385,92 @@ sleep(sleeptime)
 	elseif clientserver == "c" then
 		
 		print("To your service :)")
-		print("Calling server...")
+		print("Waiting for server...")
 		local modem = peripheral.wrap("right")
 		local channel = os.getComputerID()
 		
 		modem.open(channel)
+		modem.open(1) -- broadcast messages
+		
 		local connected = false
 		
-		-- login to the server
-		while true do
-	
-			modem.transmit(2, 0, clientMessage(clientAction.logon, channel))
 		
-			local event = {os.pullEvent("modem_message")}
-			
-			if event[5] ~= nil then
-				local message = textutils.unserialize(event[5])
-				
-				if message.data1 == true then
-					print("Server accepted")
-					connected = true
-					break
-				else
-					print("Server declined")
-					return
-				end
-			end
-		end
-		
-		local printmess
 		repeat
-		
-			printClientScreen(connected, printmess)
-			printmess = ""
+			printClientScreen(connected)
+
 			local event = {os.pullEvent()}
 			
 			if event[1] == "key" then
-			
 				local key = event[2]
 				
 				if key == keys.one then
+capi.cclog("C: user requests on/off")
 					modem.transmit(channel, 0, clientMessage(clientAction.onoff))
 				elseif key == keys.two then
+capi.cclog("C: user requests solo")
 					modem.transmit(channel, 0, clientMessage(clientAction.solo))
 				elseif key == keys.three then
+capi.cclog("C: user requests allOn")
 					modem.transmit(channel, 0, clientMessage(clientAction.allOn))
 				elseif key == keys.four then
+capi.cclog("C: user requests pivot")
 					modem.transmit(channel, 0, clientMessage(clientAction.pivot))
 				end
 			
 			elseif event[1] == "modem_message" then
-printmess = printmess.."modem message "..event[5]
+capi.cclog("C: modem message "..event[5])
 				local message = textutils.unserialize(event[5])
 	
 				local timeout = message.data1
 				
 				local isOn = hasState(turtleState, turtleStates.on)
-				
+capi.cclog("C: Turtle is on: "..(isOn == true and "true" or "false"))
 				if false then
 				
+				elseif message.action == serverAction.logon then
+				
+					modem.transmit(2, 0, clientMessage(clientAction.logon, channel))
+					connected = true
+				
 				elseif message.action == serverAction.switchState then
-					
+capi.cclog("C: request switch on/off")
 					if message.data1 == turtleStates.on then
 						
 						turtleState = toggleState(turtleState, turtleStates.on)
-						
+capi.cclog("C: turtleState now: "..turtleState)
 					end
 				
 				elseif isOn and message.action == serverAction.forward then
-				
+capi.cclog("C: receiving forward")
 					while not turtle.forward() and timeout > 0 do
 						sleep(sleeptime)
 						timeout = timeout -sleeptime
 					end
 					
 				elseif isOn and message.action == serverAction.back then
-				
+capi.cclog("C: receiving back")
 					while not turtle.back() and timeout > 0 do
 						sleep(sleeptime)
 						timeout = timeout -sleeptime
 					end
 					
 				elseif isOn and message.action == serverAction.left then
-				
+capi.cclog("C: receiving left")
 					turtle.turnLeft()
 					
 				elseif isOn and message.action == serverAction.right then
-				
+capi.cclog("C: receiving right")
 					turtle.turnRight()
 					
 				elseif isOn and message.action == serverAction.up then
-				
+capi.cclog("C: receiving up")
 					while not turtle.up() and timeout > 0 do
 						sleep(sleeptime)
 						timeout = timeout -sleeptime
 					end
 					
 				elseif isOn and message.action == serverAction.down then
-				
+capi.cclog("C: receiving down")
 					while not turtle.down() and timeout > 0 do
 						sleep(sleeptime)
 						timeout = timeout -sleeptime
@@ -472,7 +478,7 @@ printmess = printmess.."modem message "..event[5]
 					
 				end
 				
-printmess = printmess.."/nSending ready: "..clientMessage(clientAction.ready)
+capi.cclog("C: Returning ready: "..clientMessage(clientAction.ready))
 				modem.transmit(channel, 0, clientMessage(clientAction.ready))
 			end
 			
@@ -480,7 +486,7 @@ printmess = printmess.."/nSending ready: "..clientMessage(clientAction.ready)
 		until false
 		
 	end
-
+	capi.setLog(false)
 end
 
 -- 

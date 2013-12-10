@@ -4,7 +4,7 @@
 -- For a description of the interface to developing own apps
 -- refer to _AppInterfaceDef.lua on github.com/snhub/cclua.
 
-local logging = true
+local logging = false
 
 --3456789012345678901234567890123456789
 local helpPages = {}
