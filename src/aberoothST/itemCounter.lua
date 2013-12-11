@@ -5,7 +5,7 @@ local capi = commonAPI
 local sortapi = sorterAPI
 
 local filename = "itemData"
-local saveDelay = 60
+local saveDelay = 10
 local delayCount = 0
 
 local args = {}
@@ -102,7 +102,7 @@ local function printScreen()
 	print()
 	
 	
-	print("Items/Min: ", totalItems /itemData[1].count *60)
+	print("Total Items/Min: ", totalItems /itemData[1].count *60)
 	
 
 end
@@ -120,10 +120,11 @@ local save = function()
 			itemData[1].count = itemData[1].count + saveDelay
 			
 			delayCount = 0
-		else
-			delayCount = delayCount +1
-			sessionTime = sessionTime +1
 		end
+		
+		printScreen()
+		delayCount = delayCount +1
+		sessionTime = sessionTime +1
 		coroutine.yield()	
 	end
 
@@ -166,7 +167,7 @@ runApp = function()
 		
 		if itemsThere then
 			for uuid, count in pairs(itemsInChest) do
-				printScreen()
+			
 				local found = false
 				for i = 2, #itemData -1 do
 					if sortapi.getUUID(itemData[i].id, itemData[i].meta) == uuid then
@@ -183,13 +184,15 @@ runApp = function()
 			end
 			
 		else
+
 			os.sleep(1)
 			coroutine.resume(saveThread)
 		end
 	
 	until false
-	
 
 end
+
+
 
 --

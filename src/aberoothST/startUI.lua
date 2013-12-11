@@ -6,6 +6,8 @@
 
 local logging = false
 
+local startArguments = {...}
+
 --3456789012345678901234567890123456789
 local helpPages = {}
 helpPages[1] = 
@@ -825,8 +827,49 @@ capi.cclog("start->input->"..app.params[cursorStop -paramsOffset][1].."->'"..inp
 end
 
 
+local startFromTerminal = function()
+
+	local args = startArguments
+	
+	local app = _G[args[1]]
+	
+	if app == nil then
+		print("Unknown app")
+		return
+	end
+	
+	local params = app.getArgs()
+	
+	if (#args -1) ~= #params then
+		print("Wrong number of arguments")
+		return
+	end
+	
+	app.params = {}
+	for i = 1, #params do
+		table.insert(app.params, {params[i], args[i +1]})
+	end
+	
+	local args = {}
+	for k,v in ipairs(app.params) do
+		args[v[1]] = v[2]
+	end
+	
+	local result = app.validateArgs(args)
+	
+	if result ~= true then
+		print(result)
+		return
+	end
+	
+	app.runApp()
+
+end
+
+
 local main = function()
 capi.cclog("-> main()")
+	
 	-- read app location
 	local list = fs.list("")
 	if not fs.exists(appDir) then
@@ -880,7 +923,16 @@ capi.cclogtable("Apps: ", apps)
 
 	_G["refuel"] = refuel
 	
-	start()
+
+	if #startArguments > 0 then
+		
+		startFromTerminal()
+	
+	else
+	
+		start()
+		
+	end
 
 end
 
