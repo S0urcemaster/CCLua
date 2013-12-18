@@ -5,7 +5,7 @@ local capi = commonAPI
 local sortapi = sorterAPI
 
 local filename = "itemData"
-local saveDelay = 10
+local saveDelay = 60
 local delayCount = 0
 
 local args = {}

@@ -1,6 +1,10 @@
 -- redstoneTest
 
+-- - digMode remote
+-- - action buffer
+
 local capi = commonAPI
+local tapi = turtleAPI
 local gui = guiAPI
 
 local clientserver = "server"
@@ -26,9 +30,11 @@ local serverMessage = function(action, data1, data2)
 	return textutils.serialize({action = action, data1 = data1, data2 = data2})
 end
 
-local serverAction = {logon = 1, switchState = 2, forward = 3, left = 4, right = 5, up = 6, down = 7, back = 8, install = 9}
+local serverAction = {logon = 1, switchState = 2, forward = 3, left = 4, right = 5, up = 6, down = 7, back = 8, install = 9, dig = 10}
 
-local switchStateAction = {on = 1, off = 2, onoff = 3, solo = 4, pivot = 5}
+local digonoff = true
+
+local switchStateAction = {on = 1, off = 2, onoff = 3, soloOn = 4, soloOff = 5, pivot = 6, digOn = 7, digOff = 8}
 
 local getServerActionFromRemote = function(remote)
 	return serverAction[remoteActions[remote]]
@@ -39,11 +45,11 @@ local clientMessage = function(action, data1)
 	return textutils.serialize({action = action, data1 = data1})
 end
 
-local clientAction = {logon = 1, onoff = 2, solo = 4, allOn = 5, setPivot = 6, rotate = 7, ready = 8}
+local clientAction = {logon = 1, onoff = 2, solo = 4, allOn = 5, relogAll = 6, setPivot = 7, rotate = 8, ready = 9, digMode = 10}
 
-local turtleStates = {on = 1, solo = 2, pivot = 4}
+local turtleStates = {on = 1, solo = 2, pivot = 4, dig = 8}
 
-local turtleState = turtleStates.on
+local turtleState = turtleStates.on +turtleStates.dig
 
 
 local stateToggle = function(state, flag)
@@ -57,7 +63,7 @@ end
 
 
 local stateFlagOff = function(state, flag)
-	return bit.band(state, flag) == 1 and state -flag or state
+	return bit.band(state, flag) == flag and state -flag or state
 end
 
 
@@ -150,10 +156,10 @@ local printServerScreen = function()
 	print()
 	print("1 Broadcast relog")
 	print()
-
+	print("2 Dig ", digonoff and "(on)" or "(off)")
+	print()
 
 end
-
 
 local printClientScreen = function(connected)
 
@@ -163,22 +169,14 @@ local printClientScreen = function(connected)
 	print()
 	print("Connected to server: ", connected)
 	print()
-	local onoff, solo, pivot
-	if bit.band(turtleState, turtleStates.on) == turtleStates.on then onoff = "on"
-	elseif bit.band(turtleState, turtleStates.on) == 0 then onoff = "off"
-	end
-	if bit.band(turtleState, turtleStates.solo) == turtleStates.solo then solo = "true"
-	elseif bit.band(turtleState, turtleStates.solo) == 0 then solo = "false"
-	end
-	if bit.band(turtleState, turtleStates.pivot) == turtleStates.pivot then pivot = "true"
-	elseif bit.band(turtleState, turtleStates.pivot) == 0 then pivot = "false"
-	end
-	print("1 - On/Off ("..onoff..")")
-	print("2 - Solo ("..solo..")")
+	print("1 - On/Off (", hasState(turtleState, turtleStates.on), ")")
+	print("2 - Solo (", hasState(turtleState, turtleStates.solo), ")")
 	print("3 - All on")
-	print("4 - Pivot ("..pivot..")")
+	print("4 - Pivot (", hasState(turtleState, turtleStates.pivot), ")")
+	print("5 - Relog all")
+	print("6 - Dig (", hasState(turtleState, turtleStates.dig), ")")
 	print()
-
+	print("7 - Refuel ("..turtle.getFuelLevel()..")")
 end
 
 
@@ -317,6 +315,16 @@ capi.cclog("Stay alive logfile")
 capi.cclog("S: broadcasting relog")
 					modem.transmit(1, 0, serverMessage(serverAction.logon))
 					cluster = {}
+					clusterSize = 0
+				elseif event[2] == keys.two then
+					
+					if digonoff then
+						modem.transmit(1, 0, serverMessage(serverAction.switchState, switchStateAction.digOff))
+					else
+						modem.transmit(1, 0, serverMessage(serverAction.switchState, switchStateAction.digOn))
+					end
+					digonoff = not digonoff
+				
 				end
 
 			elseif event[1] == "modem_message" then
@@ -333,7 +341,14 @@ capi.cclog("S: client broadcast response "..message.data1)
 					if message.action == clientAction.logon then
 						addToCluster(message.data1, turtleStates.on)
 						modem.open(message.data1)
+						
+					elseif message.action == clientAction.relogAll then
+						
+						modem.transmit(1, 0, serverMessage(serverAction.logon))
+						cluster = {}
+						clusterSize = 0
 					end
+					
 				else
 				
 					if message.action == clientAction.ready then
@@ -354,15 +369,32 @@ capi.cclog("S: sending on/off")
 					elseif message.action == clientAction.solo then
 
 						cluster[senderChannel] = stateToggle(cluster[senderChannel], turtleStates.solo)
-						modem.transmit(senderChannel, 0, serverMessage(serverAction.switchState, switchStateAction.solo))
+						local soloonoff = hasState(cluster[senderChannel], turtleStates.solo) and switchStateAction.soloOn or switchStateAction.soloOff
+						modem.transmit(senderChannel, 0, serverMessage(serverAction.switchState, soloonoff))
+						
+						for id, _ in pairs(cluster) do
+							
+							if id ~= senderChannel and hasState(cluster[id], turtleStates.solo) then
+								cluster[id] = stateFlagOff(cluster[id], turtleStates.solo)
+								modem.transmit(id, 0, serverMessage(serverAction.switchState, switchStateAction.soloOff))
+								break
+							end
+						
+						end
 						
 					elseif message.action == clientAction.allOn then
 						
 						for id, _ in pairs(cluster) do
+							
+							if not hasState(cluster[id], turtleStates.on) then
+								cluster[id] = stateFlagOn(cluster[id], turtleStates.on)
+								modem.transmit(id, 0, serverMessage(serverAction.switchState, switchStateAction.on))
+							end
 						
-							cluster[id] = stateFlagOn(cluster[id], turtleStates.on)
-							modem.transmit(id, 0, serverMessage(serverAction.switchState, switchStateAction.on))
-						
+							if hasState(cluster[id], turtleStates.solo) then
+								cluster[id] = stateFlagOff(cluster[id], turtleStates.solo)
+								modem.transmit(id, 0, serverMessage(serverAction.switchState, switchStateAction.soloOff))
+							end
 						end
 						
 					elseif message.action == clientAction.setPivot then
@@ -378,9 +410,15 @@ capi.cclog("S: sending on/off")
 						cluster[senderChannel] = stateFlagOn(cluster[senderChannel], turtleStates.pivot)
 						modem.transmit(senderChannel, 0, serverMessage(serverAction.switchState, switchStateAction.pivotOn))
 						
-					elseif message.action == clientAction.rotate then
+				
+					elseif message.action == clientAction.digMode then
 						
-
+						if digonoff then
+							modem.transmit(1, 0, serverMessage(serverAction.switchState, switchStateAction.digOff))
+						else
+							modem.transmit(1, 0, serverMessage(serverAction.switchState, switchStateAction.digOn))
+						end
+						digonoff = not digonoff
 						
 					end
 				
@@ -395,7 +433,7 @@ capi.cclog("S: switch action: "..remoteAction)
 				elseif rs.getInput(activaLoc) then
 					
 capi.cclog("S: activator action: "..remoteAction)
-					local timeout = clusterSize
+					local timeout = clusterSize *sleeptime +1
 					table.insert(actionBuffer, {action = getServerActionFromRemote(remoteAction), data1 = timeout})
 					remoteAction = 1
 					
@@ -410,7 +448,7 @@ capi.cclog("S: monitor touch"..event[3].."/"..event[4])
 					term.restore()
 					local serverAction = buttonToServerActionMapping[bIndex]
 capi.cclog("S: Queuing serverAction "..serverAction)
-					local timeout = clusterSize
+					local timeout = clusterSize *sleeptime +1
 					table.insert(actionBuffer, {action = serverAction, data1 = timeout})
 					
 sleep(sleeptime)
@@ -439,6 +477,11 @@ capi.cclog("S: items in action buffer, resuming pushThread")
 		local modem = peripheral.wrap("right")
 		local channel = os.getComputerID()
 		
+		if modem == nil then
+			print("No modem attached")
+			print("Press key to return")
+			capi.pullKey()
+		end
 		modem.open(channel)
 		modem.open(1) -- broadcast messages
 		
@@ -465,6 +508,16 @@ capi.cclog("C: user requests allOn")
 				elseif key == keys.four then
 capi.cclog("C: user requests pivot")
 					modem.transmit(channel, 0, clientMessage(clientAction.pivot))
+				elseif key == keys.five then
+capi.cclog("C: user requests relogAll")
+					modem.transmit(2, 0, clientMessage(clientAction.relogAll, os.getComputerID()))
+				elseif key == keys.six then
+capi.cclog("C: user requests relogAll")
+					modem.transmit(channel, 0, clientMessage(clientAction.digMode))
+				
+				elseif key == keys.seven then
+					turtle.refuel()
+					
 				end
 			
 			elseif event[1] == "modem_message" then
@@ -474,6 +527,7 @@ capi.cclog("C: modem message "..event[5])
 				local timeout = message.data1
 				
 				
+				local doDig = hasState(turtleState, turtleStates.dig)
 				
 				if false then
 				
@@ -497,32 +551,54 @@ capi.cclog("C: turtleState now: "..turtleState)
 					
 						turtleState = stateFlagOff(turtleState, turtleStates.on)
 											
-					elseif message.data1 == switchStateAction.solo then
+					elseif message.data1 == switchStateAction.soloOn then
 					
-						turtleState = stateToggle(turtleState, turtleStates.solo)
+						turtleState = stateFlagOn(turtleState, turtleStates.solo)
+					
+					elseif message.data1 == switchStateAction.soloOff then
+					
+						turtleState = stateFlagOff(turtleState, turtleStates.solo)
 					
 					elseif message.data1 == switchStateAction.pivotOn then
 					
 						turtleState = stateFlagOn(turtleState, turtleStates.pivot)
 					
-					elseif messag.data1 == switchStateAction.pivotOff then
+					elseif message.data1 == switchStateAction.pivotOff then
 					
 						turtleState = stateFlagOff(turtleState, turtleStates.pivot)
+					
+					elseif message.data1 == switchStateAction.digOn then
+					
+						turtleState = stateFlagOn(turtleState, turtleStates.dig)
+					
+					elseif message.data1 == switchStateAction.digOff then
+					
+						turtleState = stateFlagOff(turtleState, turtleStates.dig)
 					
 					end
 				
 				elseif message.action == serverAction.forward then
 capi.cclog("C: receiving forward")
 					while not turtle.forward() and timeout > 0 do
-						sleep(sleeptime)
-						timeout = timeout -sleeptime
+						if doDig then
+							tapi.forward()
+							break
+						else
+							sleep(sleeptime)
+							timeout = timeout -sleeptime
+						end
 					end
 					
 				elseif message.action == serverAction.back then
 capi.cclog("C: receiving back")
 					while not turtle.back() and timeout > 0 do
-						sleep(sleeptime)
-						timeout = timeout -sleeptime
+						if doDig then
+							tapi.back()
+							break
+						else
+							sleep(sleeptime)
+							timeout = timeout -sleeptime
+						end
 					end
 					
 				elseif message.action == serverAction.left then
@@ -536,15 +612,25 @@ capi.cclog("C: receiving right")
 				elseif message.action == serverAction.up then
 capi.cclog("C: receiving up")
 					while not turtle.up() and timeout > 0 do
-						sleep(sleeptime)
-						timeout = timeout -sleeptime
+						if doDig then
+							tapi.up()
+							break
+						else
+							sleep(sleeptime)
+							timeout = timeout -sleeptime
+						end
 					end
 					
 				elseif message.action == serverAction.down then
 capi.cclog("C: receiving down")
 					while not turtle.down() and timeout > 0 do
-						sleep(sleeptime)
-						timeout = timeout -sleeptime
+						if doDig then
+							tapi.down()
+							break
+						else
+							sleep(sleeptime)
+							timeout = timeout -sleeptime
+						end
 					end
 					
 				end
